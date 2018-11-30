@@ -97,10 +97,6 @@ public int getRiskCC(int complexity) {
 	return 0;
 }
 
-public bool decreasing(tuple[&a, num] x, tuple[&a, num] y) {
-   return x[1] > y[1];
-}
-
 public RiskProfile getRiskProfileULOC(list[MethodStat] ps) {
 	int tot_low = 0, tot_mod = 0, tot_high = 0, tot_very_high = 0;
 	for (a <- ps) {
@@ -171,8 +167,6 @@ public void main(loc project) {
 	
 	println("======= ======= ====== ======= ========");
 	
-	// todo: add quality profile for LOC metric
-	// todo: add assert counting for unit tests (int unit_test = countAssert(b);)
 	// todo: add code duplictation detecion metric
 	
 	// dump all project methods to stdout
