@@ -51,7 +51,29 @@ public int countComplexity(str s) {
   return count;
 }
 
-public int getRiskLOC(int size) {
+public int countAssert(str s) {
+  int count = 0; 
+  // count the number of assert statements
+  for (/assert/i := s) {
+       count += 1;
+  }
+  return count;
+}
+
+public str getRiskProfileVolume(int lines) {
+	// catagorize the project volume risk (for java projects), taken from: 
+	// I. Heitlager, T. Kuipers, and J. Visser. A practical model for measuring maintainability. 
+	// In Proceedings of the 6th International Conference on Quality of Information and Communications Technology, 
+	// QUATIC ’07, pages 30–39, Washington, DC, USA, 2007. IEEE Computer Society.
+	if (lines > 1310000) return "very high"; 
+	if (lines > 655000)  return "high";
+	if (lines > 246000)  return "moderate";
+	if (lines > 66000)   return "low";
+	if (lines <= 66000)  return "very low";
+	return "";
+}
+
+public int getRiskULOC(int size) {
 	// catagorize the unit size risk, numbers taken from: 
 	// Visser, J., Rigal, S., van der Leek, R., van Eck, P., & Wijnholds, G. (2016). 
 	// Building Maintainable Software, Java Edition: Ten Guidelines for Future-Proof Code. 
@@ -79,7 +101,7 @@ public bool decreasing(tuple[&a, num] x, tuple[&a, num] y) {
    return x[1] > y[1];
 }
 
-public RiskProfile getRiskProfileLOC(list[MethodStat] ps) {
+public RiskProfile getRiskProfileULOC(list[MethodStat] ps) {
 	int tot_low = 0, tot_mod = 0, tot_high = 0, tot_very_high = 0;
 	for (a <- ps) {
 		if (a.risk_size == 1) tot_low += a.size;
@@ -102,14 +124,14 @@ public RiskProfile getRiskProfileCC(list[MethodStat] ps) {
 }
 
 public void displayProfile(RiskProfile rp, int LOC) {
-	println("        - low risk       : <(rp.low*100)/LOC>%");
-	println("        - moderate risk  : <(rp.moderate*100)/LOC>%");
-	println("        - high risk      : <(rp.high*100)/LOC>%");
-	println("        - very high risk : <(rp.very_high*100)/LOC>%");
+	println("        - low risk           : <(rp.low*100)/LOC>%");
+	println("        - moderate risk      : <(rp.moderate*100)/LOC>%");
+	println("        - high risk          : <(rp.high*100)/LOC>%");
+	println("        - very high risk     : <(rp.very_high*100)/LOC>%");
 }
 
 // datatype to hold statistics on project methods
-alias MethodStat = tuple[loc name, int size, int complexity, int risk_size, int risk_cc];
+alias MethodStat = tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc];
 alias RiskProfile = tuple[int low, int moderate, int high, int very_high];
 
 public void main(loc project) {
@@ -121,9 +143,10 @@ public void main(loc project) {
 	for (<name, b> <- toList(readMethods(project))) {
 		int size = countLOC(b);
 		int complexity = countComplexity(b);
-		int risk_size = getRiskLOC(size);
+		int tests = countAssert(b);
+		int risk_size = getRiskULOC(size);
 		int risk_cc = getRiskCC(complexity);
-		MethodStat ms = <name, size, complexity, risk_size, risk_cc>;
+		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
 	}
@@ -132,20 +155,25 @@ public void main(loc project) {
 	tot_LOC = sum(ProjectStat.size);
 
 	println("======= Software Metrics Summary ======");
-	println("Project name   (methods) : <project> (<size(ProjectStat.name)>)");
-	println("Project volume (KLOC)    : <tot_LOC/1000.0>");
+	println("Project name (methods)       : <project> (<size(ProjectStat.name)>)");
+	println("Project volume (LOC)         : <tot_LOC> (<getRiskProfileVolume(tot_LOC)>)");
+	println("Project unit tests (asserts) : <sum(ProjectStat.tests)> (<(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>%)");
 	
 	// calculate quality profile for unit size
-	RiskProfile LOC_prof = getRiskProfileLOC(ProjectStat);
-	println("Project unit size (%)");
-	displayProfile(LOC_prof, tot_LOC);
+	RiskProfile ULOC_prof = getRiskProfileULOC(ProjectStat);
+	println("Project unit size");
+	displayProfile(ULOC_prof, tot_LOC);
 	
 	// calculate quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
-	println("Project complexity (%)");
+	println("Project unit complexity");
 	displayProfile(CC_prof, tot_LOC);
 	
 	println("======= ======= ====== ======= ========");
+	
+	// todo: add quality profile for LOC metric
+	// todo: add assert counting for unit tests (int unit_test = countAssert(b);)
+	// todo: add code duplictation detecion metric
 	
 	// dump all project methods to stdout
 	// printMethods(project);
