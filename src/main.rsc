@@ -33,7 +33,7 @@ public void main(loc project) {
 	
 	// for each project method calculate the software metrics
 	for (<name, b> <- toList(readMethods(project))) {
-		int size = countLOC(b);               // calc number of lines of code in method (unit size)
+		int size = countLOC(name, b);         // calc number of lines of code in method (unit size)
 		int complexity = countComplexity(b);  // calc the cyclomatic complexity (unit complexity)
 		int tests = countAssert(b);           // calc the number of assert staements (unit testing)
 		
@@ -49,7 +49,7 @@ public void main(loc project) {
 	}
 	
 	// calculate code duplication
-	println(" - projectsize (for code duplication): <size(ProjectList)>");
+	println("projectsize (for code duplication): <size(ProjectList)>");
 	println("calculating code duplication (please wait)");
 	tdup = countDuplication(ProjectList, dsize);
 	
