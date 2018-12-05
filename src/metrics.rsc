@@ -15,11 +15,11 @@ public int countLOC(str s) {
        count += 1;
   }
   // substract the number of blank lines
-  for (/^[\s\t]*$/m := s) {
+  for (/^[\s]*$/m := s) {
       if (count > 0) count -= 1;
   }
-  // substract the number of comment lines (where comments start at the beginning)
-  for (/^[\/\/]+/ := s) {
+  // substract the number of comment lines (only lines with comments, not code and //)
+  for (/^[\s]*[\/\/]+/ := s) {
        if (count > 0) count -= 1;
   }
   // substract the number of multiline comments
@@ -56,7 +56,7 @@ public list[str] cleanListing(list[str] dirtylist, int dsize) {
 	list[str] cleanlist = [];
 	for (a <- dirtylist) {
 		// remove blank lines, comment lines (//) and multi-line comments from list (/*..*/) 
-		if (!/^[\/\/]+/ := a && !/^[\s\t]*$/m := a && !/\/\*[^*]*\*+(?:[^\/*][^*]*\*+)*\// := a) {
+		if (!/^[\s]*[\/\/]+/ := a && !/^[\s]*$/m := a && !/\/\*[^*]*\*+(?:[^\/*][^*]*\*+)*\// := a) {
 			cleanlist += a;
 		}
 	}

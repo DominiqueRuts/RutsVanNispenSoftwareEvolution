@@ -62,19 +62,19 @@ public void main(loc project) {
 	println(" - volume (LOC)          : <tot_LOC> (<getRiskRatingVolume(tot_LOC)>)");
 	
 	// code duplication profile
-	println(" - code duplication      : <(tdup*100)/size(ProjectList)>%  (<getRiskRatingDuplication((tdup*100)/size(ProjectList))>)");
+	println(" - code duplication      : <(tdup*100)/size(ProjectList)>% (<getRiskRatingDuplication((tdup*100)/size(ProjectList))>)");
 	
 	// unit testing profile
-	println(" - unit tests (asserts)  : <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>%  (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
+	println(" - unit tests (asserts)  : <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
 	
 	// quality profile for unit size
 	RiskProfile ULOC_prof = getRiskProfileUnitLOC(ProjectStat);
-	println(" - unit size                   (<getRiskRatingUnitSize(ULOC_prof)>)");
+	println(" - unit size             : (<getRiskRatingUnitSize(ULOC_prof)>)");
 	displayProfile(ULOC_prof, tot_LOC);
 	
 	// quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
-	println(" - unit complexity             (<getRiskRatingComplexity(CC_prof)>)");
+	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
 	displayProfile(CC_prof, tot_LOC);
 	
 	println("======= ======= ====== ======= ======= =======");
