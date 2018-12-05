@@ -9,12 +9,12 @@ import String;
 
 // count the Lines Of Code (LOC) in a string
 public int countLOC(loc l, str s) {
-  int count = 0;
+  int nl = 1; // the minimum length of a method is 1 LOC
   int bl = 0, cl = 0, ml = 0;
   
   // count the number of newline characters
   for (/[\n]+/ := s) {
-       count += 1;
+       nl += 1;
   }
   // number of blank lines
   for (/^[\s]*$/m := s) {
@@ -30,14 +30,20 @@ public int countLOC(loc l, str s) {
   } 
   
   // LOC = newlines - (blank lines + comment lines + multicomment)
-  count += (bl + cl + ml);
-  if (count < 0) {
-  	println("<l>: invalid #lines: <count>, blank(<bl>), comment(<cl>), multi-comment(<ml>)");
+  int lc = nl - (bl + cl + ml);
+  
+  // case where the body of the method is filled with blank lines and/or comments, count as 1 LOC
+  if (lc == 0) {
+  	lc = 1;
   }
   
-  //println("<l>: loc(<count>), blank(<bl>), comment(<cl>), multi-comment(<ml>)");
+  if (lc < 0) {
+  	println("<l>: invalid #lines: <lc>, newline(<nl>), blank(<bl>), comment(<cl>), multi-comment(<ml>)");
+  }
   
-  return count;
+  //println("<l>: loc(<lc>), newline(<nl>), blank(<bl>), comment(<cl>), multi-comment(<ml>)");
+  
+  return lc;
 }
 
 // calculate the cyclomatic complexity of the supplied method
