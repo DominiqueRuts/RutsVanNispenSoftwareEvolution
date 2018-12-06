@@ -83,17 +83,22 @@ public list[str] cleanListing(list[str] dirtylist, int dsize) {
 public int SearchForPattern(list[str] searchlist, list[str] pattern) {
 	int hit = 0;
 	int match = 0;
-	for (i <- [0..(size(searchlist)-size(pattern)+1)]) {
-		for (j <- [0..size(pattern)]) {
+	int sizeSearchList = size(searchlist);
+	int sizePattern = size(pattern);
+	int loopSize = sizeSearchList-sizePattern+1;
+	
+		//println("loopSize:<loopSize>");
+	for (i <- [0..(loopSize)]) {
+		for (j <- [0..sizePattern]) {
 			if ( !contains(searchlist[i+j], pattern[j]) ) {
 				break;
 			}
 			hit += 1;
 		}
 		// if a match is found, skip patternsize and continue
-		if (hit == size(pattern)) {
+		if (hit == sizePattern) {
 			match += 1;
-			i += size(pattern);
+			i += sizePattern;
 		}
 		hit = 0;
 	}
@@ -105,14 +110,29 @@ public int SearchForPattern(list[str] searchlist, list[str] pattern) {
 // find duplicate code
 public int countDuplication(list[str] listing, int blocksize) {
 	int dup_tot = 0;
-	for (i <- [0..(size(listing) - blocksize + 1)], i % blocksize == 0) {
+	//println("Start duplication check...");
+	map[str, int] duplicateLines = rangeX(distribution(listing) , {1});
+	list[str] duplicateLinesValues = [k | k:_ <- duplicateLines];
+	list[str] listingToCheck = [];
+	for (i <- [0..size(listing)]) {
+		if (indexOf(duplicateLinesValues, listing[i]) > -1) {
+			listingToCheck += listing[i];
+		}		
+	}
+
+	println("Size listingToCheck: <size(listingToCheck)>");
+	int listingSize = size(listing);
+	int loopSize = listingSize - blocksize + 1;
+	
+	for (i <- [0..(loopSize)], i % blocksize == 0) {
 		list[str] pattern = [a | a <- listing[i..(i+blocksize)]];
-		int match = SearchForPattern(listing, pattern);
+		match = SearchForPattern(listingToCheck, pattern);
 		if (match > 1) {
 			//println("match:<match> at line i:<i>");
 			dup_tot += (match - 1) * blocksize;
 		}
-		if (i % 100 == 0) println("   ..<(i*100)/size(listing)>%");
+		if (i % 100 == 0) println("   ..<(i*100)/listingSize>%");
 	}
+
 	return dup_tot;
 }

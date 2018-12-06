@@ -6,11 +6,13 @@ import Relation;
 import Map;
 import List;
 import String;
+import util::Benchmark;
 import util::Resources;
 import lang::java::jdt::m3::Core;
 
 import qprofile;
 import metrics;
+import dupmetric;
 
 // read the project into M3 model
 // returns a map of (location:methods (as string))
@@ -21,6 +23,9 @@ public map[loc, str] readMethods(loc project) {
 
 public void main(loc project) {
 
+	// set startTime to define how long the calculation takes to complete
+	int startTime = getNanoTime();
+
 	// list containing all project statistics
 	list[MethodStat] ProjectStat = [];
 	
@@ -30,7 +35,7 @@ public void main(loc project) {
 	// size of code duplication block (6 lines)
 	int dsize = 6;
 	int tdup = 0;
-	
+		
 	// for each project method calculate the software metrics
 	for (<name, b> <- toList(readMethods(project))) {
 		int size = countLOC(name, b);         // calc number of lines of code in method (unit size)
@@ -52,6 +57,7 @@ public void main(loc project) {
 	println("projectsize (for code duplication): <size(ProjectList)>");
 	println("calculating code duplication (please wait)");
 	tdup = countDuplication(ProjectList, dsize);
+	//tdup = Duplication(ProjectList);
 	
 	// total LOC in project
 	tot_LOC = sum(ProjectStat.size);
@@ -76,6 +82,13 @@ public void main(loc project) {
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
 	displayProfile(CC_prof, tot_LOC);
+	
+	println("======= ======= ====== ======= ======= =======");
+	
+	// calculate the time it took to analyze the code 
+	int estimatedTime = (getNanoTime() - startTime)/ 1000000000;
+	
+	println("Code analysis took <estimatedTime> seconds");
 	
 	println("======= ======= ====== ======= ======= =======");
 }
