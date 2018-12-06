@@ -11,8 +11,6 @@ import util::Resources;
 import lang::java::jdt::m3::Core;
 
 import qprofile;
-import metrics;
-import dupmetric;
 
 // read the project into M3 model
 // returns a map of (location:methods (as string))
@@ -57,7 +55,6 @@ public void main(loc project) {
 	println("projectsize (for code duplication): <size(ProjectList)>");
 	println("calculating code duplication (please wait)");
 	tdup = countDuplication(ProjectList, dsize);
-	//tdup = Duplication(ProjectList);
 	
 	// total LOC in project
 	tot_LOC = sum(ProjectStat.size);
