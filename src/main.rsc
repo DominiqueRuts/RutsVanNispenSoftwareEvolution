@@ -11,6 +11,7 @@ import util::Resources;
 import lang::java::jdt::m3::Core;
 
 import qprofile;
+import metrics;
 
 // read the project into M3 model
 // returns a map of (location:methods (as string))
