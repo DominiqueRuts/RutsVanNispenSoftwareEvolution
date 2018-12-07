@@ -17,11 +17,11 @@ public int countLOC(loc l, str s) {
        nl += 1;
   }
   // number of blank lines
-  for (/^[\s]*$/m := s) {
+  for (/^[\s]*$/ := s) {
       bl += 1;
   }
   // number of comment lines (only lines with comments, not code and //)
-  for (/^[\s]*[\/]{2}/ := s) {
+  for (/^[\s]*[\/]{2}/m := s) {
   	   cl += 1;
   }
   // number of multiline comments
@@ -32,7 +32,7 @@ public int countLOC(loc l, str s) {
   // LOC = newlines - (blank lines + comment lines + multicomment)
   int lc = nl - (bl + cl + ml);
   
-  // case where the body of the method is filled with blank lines and/or comments, count as 1 LOC
+  // case where the body of the method is filled a commentline only, count as 1 LOC
   if (lc == 0) {
   	lc = 1;
   }
@@ -66,14 +66,13 @@ public int countAssert(str s) {
   return count;
 }
 
-
 // returns a list with blank lines and comment lines removed
 // only returns a list when the clean list is > 6 LOC 
 public list[str] cleanListing(list[str] dirtylist, int dsize) {
 	list[str] cleanlist = [];
 	for (a <- dirtylist) {
 		// remove blank lines, comment lines (//) and multi-line comments from list (/*..*/) 
-		if (!/^[\s]*[\/]{2}/ := a && !/^[\s]*$/m := a && !/\/\*[^*]*\*+(?:[^\/*][^*]*\*+)*\// := a) {
+		if (!/^[\s]*[\/]{2}/m := a && !/^[\s]*$/ := a && !/\/\*[^*]*\*+(?:[^\/*][^*]*\*+)*\// := a) {
 			cleanlist += a;
 		}
 	}

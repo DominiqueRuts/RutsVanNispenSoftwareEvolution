@@ -8,6 +8,7 @@ import List;
 import String;
 import util::Resources;
 import lang::java::jdt::m3::Core;
+import util::Benchmark;
 
 import qprofile;
 import metrics;
@@ -19,6 +20,11 @@ public map[loc, str] readMethods(loc project) {
 	return (a:readFile(a) | a <- methods(model));
 }
 
+// return the largest tuple based on size 
+public bool increasing(tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] x, tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] y ) {
+	return x.size > y.size;
+}
+
 public void main(loc project) {
 
 	// list containing all project statistics
@@ -26,10 +32,14 @@ public void main(loc project) {
 	
 	// list containing all lines of code in the project
 	list[str] ProjectList = [];
+	list[str] PList = [];
 	
 	// size of code duplication block (6 lines)
 	int dsize = 6;
 	int tdup = 0;
+	
+	// start clock
+	int tstart = realTime();
 	
 	// for each project method calculate the software metrics
 	for (<name, b> <- toList(readMethods(project))) {
@@ -47,14 +57,28 @@ public void main(loc project) {
 		// add (clean) lines of code from the methods to project code listing
 		ProjectList += cleanListing(split("\n", b), dsize);
 	}
+		
+	// list sorted on method size
+	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
+	int max = 25;
+	println("Listing top <max> units (unit size): ");
+	for (i <- [0..max]) {
+		println("method name     : <ProjectStat_sorted_loc[i].name>");
+		println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
+	}
 	
 	// calculate code duplication
 	println("projectsize (for code duplication): <size(ProjectList)>");
 	println("calculating code duplication (please wait)");
-	tdup = countDuplication(ProjectList, dsize);
+	//tdup = countDuplication(ProjectList, dsize);
 	
 	// total LOC in project
-	tot_LOC = sum(ProjectStat.size);
+	int tot_LOC = sum(ProjectStat.size);
+
+	// stop clock
+	int tstop = realTime();
+
+ 	println("evaluation time <(tstop-tstart)> msec"); 
 
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");
