@@ -35,14 +35,12 @@ public void main(loc project) {
 	
 	// size of code duplication block (6 lines)
 	int threshold = 6;
-	int tdup = 0;
 	
 	// start clock
 	int tstart = realTime();
 
 	// calculate total lines of code (LOC) in project
 	int tot_LOC = getProjectLOC(project);
-	int tot_LOC_methods = 0;
 	
 	// add (clean) lines of source code to project code listing
 	ProjectCodeList = getProjectCodeListing(project);
@@ -59,17 +57,11 @@ public void main(loc project) {
 		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
-		
-		// total LOC in methods only
-		tot_LOC_methods += ms.size;
 	}
 	
-	//println("method volume LOC: <tot_LOC_methods>");
-
 	// calculate code duplication
 	println("calculating code duplication (please wait)");
-	threshold = 6;
-	tdup = countDuplication(ProjectCodeList, threshold);
+	int tdup = countDuplication(ProjectCodeList, threshold);
 	println("found <tdup> lines of duplicates in <tot_LOC> lines");
 	
 	// list sorted on method size
@@ -84,9 +76,7 @@ public void main(loc project) {
 	// stop clock
 	int tstop = realTime();
 
- 	println("total evaluation time <(tstop-tstart)> msec"); 
-
-	// todo: calculation of #asserts needs to be based on total complexity!
+ 	println("total evaluation time <(tstop-tstart)> msec");
 
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");
@@ -97,17 +87,17 @@ public void main(loc project) {
 	println(" - code duplication      : <tdup> lines, <(tdup*100)/tot_LOC>% (<getRiskRatingDuplication((tdup*100)/tot_LOC)>)");
 	
 	// unit testing profile
-	println(" - unit tests (asserts)  : <sum(ProjectStat.tests)> lines, <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
+	println(" - unit tests (asserts)  : <sum(ProjectStat.tests)> lines, <(sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity))>)");
 	
 	// quality profile for unit size
 	RiskProfile ULOC_prof = getRiskProfileUnitLOC(ProjectStat);
 	println(" - unit size             : (<getRiskRatingUnitSize(ULOC_prof)>)");
-	displayProfile(ULOC_prof, tot_LOC_methods);
+	displayProfile(ULOC_prof, sum(ProjectStat.size));
 	
 	// quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
-	displayProfile(CC_prof, tot_LOC_methods);
+	displayProfile(CC_prof, sum(ProjectStat.size));
 	
 	println("======= ======= ====== ======= ======= =======");
 }

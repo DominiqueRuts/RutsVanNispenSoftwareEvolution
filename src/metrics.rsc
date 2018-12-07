@@ -127,10 +127,10 @@ public int SearchForPattern(list[str] searchlist, list[str] pattern) {
 
 // count the number of exact clones in a list of strings, solution taken from: 
 // https://stackoverflow.com/questions/33446255/why-does-this-rascal-pattern-matching-code-use-so-much-memory-and-time/33451706#33451706
-public int findClone(list[str] In, list[str] whatWeSearchFor)
+public int findClone(list[str] listing, list[str] pattern)
 {
 	int match = 0;
-    for ([*str head, *whatWeSearchFor, *str end] := In) {
+    for ([*str head, *pattern, *str end] := listing) {
         match += 1;
     }
     return match;
