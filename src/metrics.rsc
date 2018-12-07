@@ -125,16 +125,26 @@ public int SearchForPattern(list[str] searchlist, list[str] pattern) {
 	return match;
 }
 
-// takes a pattern of blocksize from the code listing and 
-// slides it in steps of blocksize over the code listing to
-// find duplicate code
+// count the number of exact clones in a list of strings, solution taken from: 
+// https://stackoverflow.com/questions/33446255/why-does-this-rascal-pattern-matching-code-use-so-much-memory-and-time/33451706#33451706
+public int findClone(list[str] In, list[str] whatWeSearchFor)
+{
+	int match = 0;
+    for ([*str head, *whatWeSearchFor, *str end] := In) {
+        match += 1;
+    }
+    return match;
+} 
+
+// takes a pattern of blocksize from the code listing and slides it
+// in steps of blocksize over the code listing to find duplicate code
 public int countDuplication(list[str] listing, int blocksize) {
 	int dup_tot = 0;
 	for (i <- [0..(size(listing) - blocksize + 1)], i % blocksize == 0) {
 		list[str] pattern = [a | a <- listing[i..(i+blocksize)]];
-		int match = SearchForPattern(listing, pattern);
+		int match = findClone(listing, pattern);		
 		if (match > 1) {
-			//println("match:<match> at line i:<i>");
+			//println("match: <match> at line i: <i>");
 			dup_tot += (match - 1) * blocksize;
 		}
 		if (i % 100 == 0) println("   ..<(i*100)/size(listing)>%");

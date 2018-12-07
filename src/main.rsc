@@ -34,7 +34,7 @@ public void main(loc project) {
 	list[str] ProjectCodeList = [];
 	
 	// size of code duplication block (6 lines)
-	int dsize = 6;
+	int threshold = 6;
 	int tdup = 0;
 	
 	// start clock
@@ -42,6 +42,7 @@ public void main(loc project) {
 
 	// calculate total lines of code (LOC) in project
 	int tot_LOC = getProjectLOC(project);
+	int tot_LOC_methods = 0;
 	
 	// add (clean) lines of source code to project code listing
 	ProjectCodeList = getProjectCodeListing(project);
@@ -58,46 +59,55 @@ public void main(loc project) {
 		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
+		
+		// total LOC in methods only
+		tot_LOC_methods += ms.size;
 	}
 	
+	//println("method volume LOC: <tot_LOC_methods>");
+
 	// calculate code duplication
-	println("calculating code duplication on <tot_LOC> lines (please wait)");
-	tdup = countDuplication(ProjectCodeList, dsize);
-		
+	println("calculating code duplication (please wait)");
+	threshold = 6;
+	tdup = countDuplication(ProjectCodeList, threshold);
+	println("found <tdup> lines of duplicates in <tot_LOC> lines");
+	
 	// list sorted on method size
-	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
-	int max = 20;
-	println("Listing top <max> units (unit size): ");
-	for (i <- [0..max]) {
-		println("method name     : <ProjectStat_sorted_loc[i].name>");
-		println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
-	}
+	//list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
+	//int max = 20;
+	//println("Listing top <max> units (unit size): ");
+	//for (i <- [0..max]) {
+	//	println("method name     : <ProjectStat_sorted_loc[i].name>");
+	//	println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
+	//}
 	
 	// stop clock
 	int tstop = realTime();
 
  	println("total evaluation time <(tstop-tstart)> msec"); 
 
+	// todo: calculation of #asserts needs to be based on total complexity!
+
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");
 	println(" - number of methods     : <size(ProjectStat.name)>");
-	println(" - volume (LOC)          : <tot_LOC> (<getRiskRatingVolume(tot_LOC)>)");
+	println(" - volume (LOC)          : <tot_LOC> lines (<getRiskRatingVolume(tot_LOC)>)");
 	
 	// code duplication profile
-	println(" - code duplication      : <(tdup*100)/tot_LOC>% (<getRiskRatingDuplication((tdup*100)/tot_LOC)>)");
+	println(" - code duplication      : <tdup> lines, <(tdup*100)/tot_LOC>% (<getRiskRatingDuplication((tdup*100)/tot_LOC)>)");
 	
 	// unit testing profile
-	println(" - unit tests (asserts)  : <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
+	println(" - unit tests (asserts)  : <sum(ProjectStat.tests)> lines, <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
 	
 	// quality profile for unit size
 	RiskProfile ULOC_prof = getRiskProfileUnitLOC(ProjectStat);
 	println(" - unit size             : (<getRiskRatingUnitSize(ULOC_prof)>)");
-	displayProfile(ULOC_prof, tot_LOC);
+	displayProfile(ULOC_prof, tot_LOC_methods);
 	
 	// quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
-	displayProfile(CC_prof, tot_LOC);
+	displayProfile(CC_prof, tot_LOC_methods);
 	
 	println("======= ======= ====== ======= ======= =======");
 }
