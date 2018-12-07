@@ -6,11 +6,43 @@ import Relation;
 import Map;
 import List;
 import String;
+import util::Resources;
+
+// returns the number of lines of code in the source code files of the project
+public int getProjectLOC(loc project) { 
+  int tloc = 0;
+  Resource r = getProject(project);
+  
+  // get a list of all java sorce code files files in the project
+  set[loc] files = { a | /file(a) <- r, a.extension == "java" };
+    
+  // from all files, count the number of lines, excluding blank lines, 
+  // comment lines and java annotations (//, /*, */, lines starting with * and @) 
+  for(j <- files) {
+  	list[str] sl = [a | a <- readFileLines(j), !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a)];
+  	//for (l <- sl) println(l);
+  	tloc += size(sl);
+  }
+  //println("total LOC: <tloc>");
+  return tloc;
+}
+
+// returns a list with all (cleaned-up := trimmed + comments etc. removed) lines of code from the project
+public list[str] getProjectCodeListing(loc project) { 
+  int tloc = 0;
+  list[str] sl = [];
+  Resource r = getProject(project); 
+  set[loc] files = { a | /file(a) <- r, a.extension == "java" }; 
+  for(j <- files) {
+  	sl += [trim(a) | a <- readFileLines(j), !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a)];
+  }
+  return sl;
+}
 
 // count the Lines Of Code (LOC) in a string
 public int countLOC(loc l, str s) {
   int nl = 1; // the minimum length of a method is 1 LOC
-  int bl = 0, cl = 0, ml = 0;
+  int bl = 0, cl = 0, ml = 0, al = 0;
   
   // count the number of newline characters
   for (/[\n]+/ := s) {
@@ -29,8 +61,13 @@ public int countLOC(loc l, str s) {
   	  ml += 1;
   } 
   
-  // LOC = newlines - (blank lines + comment lines + multicomment)
-  int lc = nl - (bl + cl + ml);
+  // number of annotaions
+  for (/^[\s]*[\/\*@]/ := s) {
+  	  al += 1;
+  } 
+  
+  // LOC = newlines - (blank lines + comment lines + multicomment) + annotations
+  int lc = nl - (bl + cl + ml + al);
   
   // case where the body of the method is filled a commentline only, count as 1 LOC
   if (lc == 0) {
@@ -64,23 +101,6 @@ public int countAssert(str s) {
        count += 1;
   }
   return count;
-}
-
-// returns a list with blank lines and comment lines removed
-// only returns a list when the clean list is > 6 LOC 
-public list[str] cleanListing(list[str] dirtylist, int dsize) {
-	list[str] cleanlist = [];
-	for (a <- dirtylist) {
-		// remove blank lines, comment lines (//) and multi-line comments from list (/*..*/) 
-		if (!/^[\s]*[\/]{2}/m := a && !/^[\s]*$/ := a && !/\/\*[^*]*\*+(?:[^\/*][^*]*\*+)*\// := a) {
-			cleanlist += a;
-		}
-	}
-	// only return methods of (size >= dsize) lines of code  
-	if (size(cleanlist) < dsize) {
-		cleanlist = [];
-	}
-	return cleanlist;
 }
 
 // substring search (match individual lines in the project listing):

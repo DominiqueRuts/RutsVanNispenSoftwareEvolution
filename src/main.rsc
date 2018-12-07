@@ -31,8 +31,7 @@ public void main(loc project) {
 	list[MethodStat] ProjectStat = [];
 	
 	// list containing all lines of code in the project
-	list[str] ProjectList = [];
-	list[str] PList = [];
+	list[str] ProjectCodeList = [];
 	
 	// size of code duplication block (6 lines)
 	int dsize = 6;
@@ -40,6 +39,12 @@ public void main(loc project) {
 	
 	// start clock
 	int tstart = realTime();
+
+	// calculate total lines of code (LOC) in project
+	int tot_LOC = getProjectLOC(project);
+	
+	// add (clean) lines of source code to project code listing
+	ProjectCodeList = getProjectCodeListing(project);
 	
 	// for each project method calculate the software metrics
 	for (<name, b> <- toList(readMethods(project))) {
@@ -53,32 +58,25 @@ public void main(loc project) {
 		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
-		
-		// add (clean) lines of code from the methods to project code listing
-		ProjectList += cleanListing(split("\n", b), dsize);
 	}
+	
+	// calculate code duplication
+	println("calculating code duplication on <tot_LOC> lines (please wait)");
+	tdup = countDuplication(ProjectCodeList, dsize);
 		
 	// list sorted on method size
 	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
-	int max = 25;
+	int max = 20;
 	println("Listing top <max> units (unit size): ");
 	for (i <- [0..max]) {
 		println("method name     : <ProjectStat_sorted_loc[i].name>");
 		println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
 	}
 	
-	// calculate code duplication
-	println("projectsize (for code duplication): <size(ProjectList)>");
-	println("calculating code duplication (please wait)");
-	//tdup = countDuplication(ProjectList, dsize);
-	
-	// total LOC in project
-	int tot_LOC = sum(ProjectStat.size);
-
 	// stop clock
 	int tstop = realTime();
 
- 	println("evaluation time <(tstop-tstart)> msec"); 
+ 	println("total evaluation time <(tstop-tstart)> msec"); 
 
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");
@@ -86,7 +84,7 @@ public void main(loc project) {
 	println(" - volume (LOC)          : <tot_LOC> (<getRiskRatingVolume(tot_LOC)>)");
 	
 	// code duplication profile
-	println(" - code duplication      : <(tdup*100)/size(ProjectList)>% (<getRiskRatingDuplication((tdup*100)/size(ProjectList))>)");
+	println(" - code duplication      : <(tdup*100)/tot_LOC>% (<getRiskRatingDuplication((tdup*100)/tot_LOC)>)");
 	
 	// unit testing profile
 	println(" - unit tests (asserts)  : <(sum(ProjectStat.tests)*100)/size(ProjectStat.name)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/size(ProjectStat.name))>)");
