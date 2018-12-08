@@ -76,7 +76,7 @@ public void main(loc project) {
 	// stop clock
 	int tstop = realTime();
 
- 	println("total evaluation time <(tstop-tstart)> msec");
+ 	println("total evaluation time <(tstop-tstart)> msec / <(tstop-tstart)/1000> sec");
 
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");

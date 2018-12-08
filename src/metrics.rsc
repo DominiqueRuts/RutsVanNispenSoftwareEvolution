@@ -140,14 +140,21 @@ public int findClone(list[str] listing, list[str] pattern)
 // in steps of blocksize over the code listing to find duplicate code
 public int countDuplication(list[str] listing, int blocksize) {
 	int dup_tot = 0;
-	for (i <- [0..(size(listing) - blocksize + 1)], i % blocksize == 0) {
+
+	// remove lines of code that have no duplication at all, to reduce the full list to scan
+	println("-- Preparing code listing to check...");
+	list[str] duplicateLinesValues = [k | k:_ <- rangeX(distribution(listing) , {1})];
+	list[str] listingToCheck = [x | x <- listing, x in(duplicateLinesValues)];
+
+	println("-- Start code duplication check for <size(listingToCheck)> lines...");
+	for (i <- [0..(size(listingToCheck) - blocksize + 1)], i % blocksize == 0) {
 		list[str] pattern = [a | a <- listing[i..(i+blocksize)]];
-		int match = findClone(listing, pattern);		
+		int match = findClone(listingToCheck, pattern);		
 		if (match > 1) {
 			//println("match: <match> at line i: <i>");
 			dup_tot += (match - 1) * blocksize;
 		}
-		if (i % 100 == 0) println("   ..<(i*100)/size(listing)>%");
+		if (i % 100 == 0) println("   ..<(i*100)/size(listingToCheck)>%");
 	}
 	return dup_tot;
 }
