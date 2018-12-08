@@ -8,6 +8,14 @@ import List;
 import String;
 import util::Resources;
 
+// returns the number of relevant files in the project
+public int getProjectFiles(loc project) { 
+  int tloc = 0;
+  Resource r = getProject(project);
+  set[loc] files = { a | /file(a) <- r, a.extension == "java" };
+  return size(files);
+}
+
 // returns the number of lines of code in the source code files of the project
 public int getProjectLOC(loc project) { 
   int tloc = 0;
@@ -103,38 +111,25 @@ public int countAssert(str s) {
   return count;
 }
 
-// substring search (match individual lines in the project listing):
-// search for pattern in the searchlist, advancing 1 line at a time until the end of the list
-public int SearchForPattern(list[str] searchlist, list[str] pattern) {
-	int hit = 0;
-	int match = 0;
-	for (i <- [0..(size(searchlist)-size(pattern)+1)]) {
-		for (j <- [0..size(pattern)]) {
-			if ( !contains(searchlist[i+j], pattern[j]) ) {
-				break;
-			}
-			hit += 1;
-		}
-		// if a match is found, skip patternsize and continue
-		if (hit == size(pattern)) {
-			match += 1;
-			i += size(pattern);
-		}
-		hit = 0;
-	}
-	return match;
-}
-
 // count the number of exact clones in a list of strings, solution taken from: 
 // https://stackoverflow.com/questions/33446255/why-does-this-rascal-pattern-matching-code-use-so-much-memory-and-time/33451706#33451706
 public int findClone(list[str] listing, list[str] pattern)
 {
 	int match = 0;
-    for ([*str head, *pattern, *str end] := listing) {
+    for ([*head, *pattern, *_] := listing) {
         match += 1;
     }
     return match;
-} 
+}
+
+// return a hash of input string s
+public int getHash(str s) {
+	int hash = 7;
+	for (i <- [0..size(s)]) {
+    	hash = hash * 31 + charAt(s, i);
+	}
+	return hash;
+}
 
 // takes a pattern of blocksize from the code listing and slides it
 // in steps of blocksize over the code listing to find duplicate code
@@ -142,7 +137,7 @@ public int countDuplication(list[str] listing, int blocksize) {
 	int dup_tot = 0;
 	for (i <- [0..(size(listing) - blocksize + 1)], i % blocksize == 0) {
 		list[str] pattern = [a | a <- listing[i..(i+blocksize)]];
-		int match = findClone(listing, pattern);		
+		int match = findClone(listing, pattern);
 		if (match > 1) {
 			//println("match: <match> at line i: <i>");
 			dup_tot += (match - 1) * blocksize;

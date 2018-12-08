@@ -59,8 +59,12 @@ public void main(loc project) {
 		ProjectStat += ms;
 	}
 	
+	// generate a hashed code listing (for faster searching?)
+	//println("hashing source code list..");
+	//list[int] ProjectCodeList_hashed = mapper(ProjectCodeList, getHash);
+	
 	// calculate code duplication
-	println("calculating code duplication (please wait)");
+	println("calculating code duplication..");
 	int tdup = countDuplication(ProjectCodeList, threshold);
 	println("found <tdup> lines of duplicates in <tot_LOC> lines");
 	
@@ -80,6 +84,7 @@ public void main(loc project) {
 
 	println("======= Software Metrics Summary ============");
 	println("Project name             : <project>");
+	println(" - number of files       : <getProjectFiles(project)>");
 	println(" - number of methods     : <size(ProjectStat.name)>");
 	println(" - volume (LOC)          : <tot_LOC> lines (<getRiskRatingVolume(tot_LOC)>)");
 	
