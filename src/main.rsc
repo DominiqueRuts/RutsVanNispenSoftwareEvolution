@@ -79,8 +79,7 @@ public void main(str projectName) {
 
 	println("======= ======= ====== ======= ======= =======");
  	println("Total evaluation time <(tstop-tstart)> msec / <(tstop-tstart)/1000> sec");
-
-	println("======= Software Metrics Summary ============");
+	println("======== Software Metrics Summary ============");
 	println("Project name             : <project>");
 	println(" - number of files       : <getProjectFiles(project)>");
 	println(" - number of methods     : <size(ProjectStat.name)>");
@@ -100,7 +99,19 @@ public void main(str projectName) {
 	// quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
-	displayProfile(CC_prof, sum(ProjectStat.size));
+	displayProfile(CC_prof, sum(ProjectStat.size));	
+	println("======= ======= ====== ======= ======= =======");
+
+	// map individual metric ratings to a system score
+	SystemScore ss = getSystemScore(getRisk(getRiskRatingVolume(tot_LOC)), getRisk(getRiskRatingDuplication((tdup*100)/tot_LOC)),
+	getRisk(getRiskRatingComplexity(CC_prof)), getRisk(getRiskRatingUnitSize(ULOC_prof)),
+	getRisk(getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity))));
 	
 	println("======= ======= ====== ======= ======= =======");
+	println("========= ISO 9126 System Level Scores =======");
+	println(" - analysability         : <ss.analysability>");
+	println(" - changeability         : <ss.changeability>");
+	println(" - stability             : <ss.stability>");
+	println(" - testability           : <ss.testability>");
+	println("==============================================");
 }
