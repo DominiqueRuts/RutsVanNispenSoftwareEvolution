@@ -87,8 +87,12 @@ public int countLOC(loc l, str s) {
 public int countComplexity(str s) {
   int count = 1; 
   // count the number of branching statements
-  for (/\b(?:if|for|while|case|catch)\b/ := s) {
-       count += 1;
+  for (/\b(?:if|for|while|case|catch|throw|&&|\|\||\?)\b/ := s) {
+  	//TODO: clear out statements that are found in comments or use AST
+  	//if (!(/^[\s]*[\/]{2}/ := s || /^[\s]*$/ := s || /^[\s]*[\/\*@]/ := s)) {
+  	count += 1;
+  	//}
+       
   }
   return count;
 }
@@ -103,34 +107,12 @@ public int countAssert(str s) {
   return count;
 }
 
-// substring search (match individual lines in the project listing):
-// search for pattern in the searchlist, advancing 1 line at a time until the end of the list
-public int SearchForPattern(list[str] searchlist, list[str] pattern) {
-	int hit = 0;
-	int match = 0;
-	for (i <- [0..(size(searchlist)-size(pattern)+1)]) {
-		for (j <- [0..size(pattern)]) {
-			if ( !contains(searchlist[i+j], pattern[j]) ) {
-				break;
-			}
-			hit += 1;
-		}
-		// if a match is found, skip patternsize and continue
-		if (hit == size(pattern)) {
-			match += 1;
-			i += size(pattern);
-		}
-		hit = 0;
-	}
-	return match;
-}
-
 // count the number of exact clones in a list of strings, solution taken from: 
 // https://stackoverflow.com/questions/33446255/why-does-this-rascal-pattern-matching-code-use-so-much-memory-and-time/33451706#33451706
 public int findClone(list[str] listing, list[str] pattern)
 {
 	int match = 0;
-    for ([*str head, *pattern, *str end] := listing) {
+    for ([*head, *pattern, *_] := listing) {
         match += 1;
     }
     return match;
@@ -141,20 +123,16 @@ public int findClone(list[str] listing, list[str] pattern)
 public int countDuplication(list[str] listing, int blocksize) {
 	int dup_tot = 0;
 
-	// remove lines of code that have no duplication at all, to reduce the full list to scan
-	println("-- Preparing code listing to check...");
-	list[str] duplicateLinesValues = [k | k:_ <- rangeX(distribution(listing) , {1})];
-	list[str] listingToCheck = [x | x <- listing, x in(duplicateLinesValues)];
-
-	println("-- Start code duplication check for <size(listingToCheck)> lines...");
-	for (i <- [0..(size(listingToCheck) - blocksize + 1)], i % blocksize == 0) {
+	for (i <- [0..(size(listing) - blocksize + 1)], i % blocksize == 0) {
 		list[str] pattern = [a | a <- listing[i..(i+blocksize)]];
-		int match = findClone(listingToCheck, pattern);		
+		int match = findClone(listing, pattern);		
 		if (match > 1) {
 			//println("match: <match> at line i: <i>");
 			dup_tot += (match - 1) * blocksize;
 		}
-		if (i % 100 == 0) println("   ..<(i*100)/size(listingToCheck)>%");
+		
+		if (i % 100 == 0) println("   ..<(i*100)/size(listing)>%");
 	}
 	return dup_tot;
 }
+
