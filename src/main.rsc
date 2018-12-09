@@ -107,7 +107,6 @@ public void main(str projectName) {
 	getRisk(getRiskRatingComplexity(CC_prof)), getRisk(getRiskRatingUnitSize(ULOC_prof)),
 	getRisk(getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity))));
 	
-	println("======= ======= ====== ======= ======= =======");
 	println("========= ISO 9126 System Level Scores =======");
 	println(" - analysability         : <ss.analysability>");
 	println(" - changeability         : <ss.changeability>");
