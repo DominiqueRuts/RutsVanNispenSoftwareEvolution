@@ -5,6 +5,7 @@ import IO;
 // datatypes to hold statistics on project methods
 alias MethodStat = tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc];
 alias RiskProfile = tuple[int low, int moderate, int high, int very_high];
+alias SystemScore = tuple[str analysability, str changeability, str stability, str testability];
 
 public str getRiskRatingVolume(int lines) {
 	// catagorize the project volume risk (for java projects), taken from: 
@@ -71,6 +72,27 @@ public str getRiskRatingUnitSize(RiskProfile p) {
 	return "";
 }
 
+// return risk from rating
+public int getRisk(str rating) {
+	if (rating == "--") return 1; 
+	if (rating == "-")  return 2;
+	if (rating == "o")  return 3;
+	if (rating == "+")  return 4;
+	if (rating == "++") return 5;
+	// default
+	return 0;
+}
+
+// return rating from risk
+public str getScore(int risk) {
+	if (risk == 1) return "--"; 
+	if (risk == 2) return "-";
+	if (risk == 3) return "o"; 
+	if (risk == 4) return "+";
+	if (risk == 5) return "++"; 
+	return "";
+}
+
 public int getRiskUnitLOC(int size) {
 	// catagorize the unit size risk, numbers taken from: 
 	// Visser, J., Rigal, S., van der Leek, R., van Eck, P., & Wijnholds, G. (2016). 
@@ -115,6 +137,17 @@ public RiskProfile getRiskProfileCC(list[MethodStat] ps) {
 		if (a.risk_cc == 4) tot_very_high += a.size;
 	};
 	return <tot_low, tot_mod, tot_high, tot_very_high>;
+}
+
+public SystemScore getSystemScore(int volume, int duplication, int unit_cc, int unit_size, int unit_test) {
+	//println("ratings - vol:<volume> dup:<duplication> cc:<unit_cc> size:<unit_size> test:<unit_test>");
+	
+	str analysability = getScore((volume + duplication + unit_size + unit_test)/4);
+	str changeability = getScore((duplication + unit_cc)/2);
+	str stability = getScore(unit_test);
+	str testability = getScore((unit_cc + unit_size + unit_test)/3);
+	
+	return <analysability, changeability, stability, testability>;
 }
 
 public void displayProfile(RiskProfile rp, int LOC) {
