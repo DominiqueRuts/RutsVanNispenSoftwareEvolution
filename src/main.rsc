@@ -39,7 +39,7 @@ public void main(str projectName) {
 	
 	// add (clean) lines of source code to project code listing
 	ProjectCodeList = getProjectCodeListing(project);
-	//int totalcomplexity = 0;
+	int totalcomplexity = 0;
 	// for each project method calculate the software metrics	
 	println("Calculating lines of code (unit size), cyclomatic complexity and unit testing coverage...");
 	println("Calculating risk per unit size and risk per unit complexity...");
@@ -51,12 +51,13 @@ public void main(str projectName) {
 		int risk_size = getRiskUnitLOC(size);
 		int risk_cc = getRiskCC(complexity);
 		
-		//totalcomplexity += complexity;
+		totalcomplexity += complexity;
 		
 		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
 	}
+
 	//println("Total Complexity <totalcomplexity>");
 	
 	// calculate code duplication
