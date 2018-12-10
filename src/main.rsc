@@ -20,7 +20,7 @@ public bool increasing(tuple[loc name, int size, int complexity, int tests, int 
 }
 
 public void main(str projectName) {
-	loc project = getProjectLoc(projectName);
+	loc project = getProjectLocation(projectName);
 
 	// list containing all project statistics
 	list[MethodStat] ProjectStat = [];
@@ -37,9 +37,12 @@ public void main(str projectName) {
 	// calculate total lines of code (LOC) in project
 	int tot_LOC = getProjectLOC(project);
 	
+	// total complexity of the application
+	int totalcomplexity = 0;
+	
 	// add (clean) lines of source code to project code listing
 	ProjectCodeList = getProjectCodeListing(project);
-	int totalcomplexity = 0;
+
 	// for each project method calculate the software metrics	
 	println("Calculating lines of code (unit size), cyclomatic complexity and unit testing coverage...");
 	println("Calculating risk per unit size and risk per unit complexity...");
@@ -81,7 +84,7 @@ public void main(str projectName) {
  	println("Total evaluation time <(tstop-tstart)> msec / <etime> sec");
 	println("======== Software Metrics Summary ============");
 	println("Project name             : <project>");
-	println(" - number of files       : <getProjectFiles(project)>");
+	println(" - number of files       : <getProjectFilesCount()>");
 	println(" - number of methods     : <size(ProjectStat.name)>");
 	println(" - volume (LOC)          : <tot_LOC> lines (<getRiskRatingVolume(tot_LOC)>)");
 	println(" - complexity            : <totalcomplexity>");

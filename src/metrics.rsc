@@ -8,13 +8,15 @@ import List;
 import String;
 import util::Resources;
 
+import filecontroller;
+
 // returns the number of lines of code in the source code files of the project
 public int getProjectLOC(loc project) { 
   int tloc = 0;
   Resource r = getProject(project);
   
   // get a list of all java sorce code files files in the project
-  set[loc] files = { a | /file(a) <- r, a.extension == "java" };
+  set[loc] files = getProjectFiles(r);
     
   // from all files, count the number of lines, excluding blank lines, 
   // comment lines and java annotations (//, /*, */, lines starting with * and @) 
@@ -32,7 +34,7 @@ public list[str] getProjectCodeListing(loc project) {
   int tloc = 0;
   list[str] sl = [];
   Resource r = getProject(project); 
-  set[loc] files = { a | /file(a) <- r, a.extension == "java" }; 
+  set[loc] files = getProjectFiles(r);
   for(j <- files) {
   	sl += [trim(a) | a <- readFileLines(j), !(isNoise(a))];
   }

@@ -6,8 +6,12 @@ import String;
 import util::Resources;
 import lang::java::jdt::m3::Core;
 
+private set[loc] files = {};
+private bool initialLoad = true;
+
 // return the project loc based on the project name
-public loc getProjectLoc(str projectName) {
+public loc getProjectLocation(str projectName) {
+	initialLoad = true;
 	return |project://<projectName>/|;
 }
 
@@ -19,9 +23,15 @@ public map[loc, str] readMethods(loc project) {
 }
 
 // returns the number of relevant files in the project
-public int getProjectFiles(loc project) { 
-  int tloc = 0;
-  Resource r = getProject(project);
-  set[loc] files = { a | /file(a) <- r, a.extension == "java" };
-  return size(files);
+public set[loc] getProjectFiles(Resource r) {
+	if (initialLoad) {
+		initialLoad = false;
+		files = { a | /file(a) <- r, a.extension == "java" };
+	}
+	return files;
+}
+
+// returns the number of relevant files in the project
+public int getProjectFilesCount() {
+	return size(files);
 }
