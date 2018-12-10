@@ -19,7 +19,7 @@ public int getProjectLOC(loc project) {
   // from all files, count the number of lines, excluding blank lines, 
   // comment lines and java annotations (//, /*, */, lines starting with * and @) 
   for(j <- files) {
-  	list[str] sl = [a | a <- readFileLines(j), !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a)];
+  	list[str] sl = [a | a <- readFileLines(j), !(isNoise(a))];
   	//for (l <- sl) println(l);
   	tloc += size(sl);
   }
@@ -34,10 +34,15 @@ public list[str] getProjectCodeListing(loc project) {
   Resource r = getProject(project); 
   set[loc] files = { a | /file(a) <- r, a.extension == "java" }; 
   for(j <- files) {
-  	sl += [trim(a) | a <- readFileLines(j), !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a)];
+  	sl += [trim(a) | a <- readFileLines(j), !(isNoise(a))];
   }
   return sl;
 }
+
+// check if a string contains noise (and can be removed)
+public bool isNoise(str line) {
+	return (/^[\s]*[\/]{2}/ := line || /^[\s]*$/ := line || /^[\s]*[\/\*@]/ := line);
+} 
 
 // count the Lines Of Code (LOC) in a string
 public int countLOC(loc l, str s) {
@@ -89,7 +94,7 @@ public int countComplexity(str s) {
   
   // split the string into seperate lines, remove comment lines etc. and merge back to lower false positive match count
   list[str] sl = split("\n", s);
-  str cs = intercalate("\n", [ a | a <- sl, !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a) ]);
+  str cs = intercalate("\n", [ a | a <- sl, !(isNoise(a)) ]);
   
   // count the number of branching statements 	  	
   for (/\b(?:if|for|while|case|catch|&&|\|\|)\b/ := cs) {	  	
