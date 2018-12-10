@@ -57,8 +57,6 @@ public void main(str projectName) {
 		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
 		ProjectStat += ms;
 	}
-
-	//println("Total Complexity <totalcomplexity>");
 	
 	// calculate code duplication
 	println("Calculating code duplication...");
@@ -86,6 +84,7 @@ public void main(str projectName) {
 	println(" - number of files       : <getProjectFiles(project)>");
 	println(" - number of methods     : <size(ProjectStat.name)>");
 	println(" - volume (LOC)          : <tot_LOC> lines (<getRiskRatingVolume(tot_LOC)>)");
+	println(" - complexity            : <totalcomplexity>");
 	
 	// code duplication profile
 	println(" - code duplication      : <tdup> lines, <(tdup*100)/tot_LOC>% (<getRiskRatingDuplication((tdup*100)/tot_LOC)>)");

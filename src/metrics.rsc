@@ -39,7 +39,7 @@ public list[str] getProjectCodeListing(loc project) {
   return sl;
 }
 
-// check if a string contains noise (and can be removed)
+// check if a line contains noise (and can be removed)
 public bool isNoise(str line) {
 	return (/^[\s]*[\/]{2}/ := line || /^[\s]*$/ := line || /^[\s]*[\/\*@]/ := line);
 } 
