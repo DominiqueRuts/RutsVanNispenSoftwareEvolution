@@ -77,8 +77,10 @@ public void main(str projectName) {
 	// stop clock
 	int tstop = realTime();
 
-	println("======= ======= ====== ======= ======= =======");
- 	println("Total evaluation time <(tstop-tstart)> msec / <(tstop-tstart)/1000> sec");
+	real etime = (tstop-tstart)/1000.0;
+
+	println("==============================================");
+ 	println("Total evaluation time <(tstop-tstart)> msec / <etime> sec");
 	println("======== Software Metrics Summary ============");
 	println("Project name             : <project>");
 	println(" - number of files       : <getProjectFiles(project)>");
@@ -100,7 +102,7 @@ public void main(str projectName) {
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
 	displayProfile(CC_prof, sum(ProjectStat.size));	
-	println("======= ======= ====== ======= ======= =======");
+	println("==============================================");
 
 	// map individual metric ratings to a system score
 	SystemScore ss = getSystemScore(getRisk(getRiskRatingVolume(tot_LOC)), getRisk(getRiskRatingDuplication((tdup*100)/tot_LOC)),

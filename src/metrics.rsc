@@ -86,17 +86,15 @@ public int countLOC(loc l, str s) {
 // calculate the cyclomatic complexity of the supplied method
 public int countComplexity(str s) {
   int count = 1; 
-  // split the method in lines to allow better regex filtering
+  
+  // split the string into seperate lines, remove comment lines etc. and merge back to lower false positive match count
   list[str] sl = split("\n", s);
-  // count the number of branching statements 
-  for (l <- sl) {	  	
-	  for (/\b(?:if|for|while|case|catch|&&|\|\|)\b/ := l) {	  	
-	  	// clear out statements that are found in comments and annotations
-	  	if (!(/^[\s]*[\/]{2}/ := l || /^[\s]*$/ := l || /^[\s]*[\/\*@]/ := l)) {	
-	  		count += 1;	
-	  	}	       
-	  }  
-  }
+  str cs = intercalate("\n", [ a | a <- sl, !(/^[\s]*[\/]{2}/ := a || /^[\s]*$/ := a || /^[\s]*[\/\*@]/ := a) ]);
+  
+  // count the number of branching statements 	  	
+  for (/\b(?:if|for|while|case|catch|&&|\|\|)\b/ := cs) {	  	
+	count += 1;	       
+  }  
   return count;
 }
 
