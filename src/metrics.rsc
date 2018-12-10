@@ -37,7 +37,7 @@ public list[str] getProjectCodeListing(loc project) {
   	sl += [trim(a) | a <- readFileLines(j), !(isNoise(a))];
   }
   return sl;
-}
+} 
 
 // check if a line contains noise (and can be removed)
 public bool isNoise(str line) {
@@ -88,14 +88,16 @@ public int countLOC(loc l, str s) {
   return lc;
 }
 
+// split the string into seperate lines, remove comment lines etc. and merge back to lower false positive match count
+public str cleanString(str s) {
+  	return cs = intercalate("\n", [ a | a <- split("\n", s), !(isNoise(a)) ]);
+}
+
 // calculate the cyclomatic complexity of the supplied method
 public int countComplexity(str s) {
   int count = 1; 
-  
-  // split the string into seperate lines, remove comment lines etc. and merge back to lower false positive match count
-  list[str] sl = split("\n", s);
-  str cs = intercalate("\n", [ a | a <- sl, !(isNoise(a)) ]);
-  
+  // remove comments etc. from the string
+  str cs = cleanString(s);
   // count the number of branching statements 	  	
   for (/\b(?:if|for|while|case|catch|&&|\|\|)\b/ := cs) {	  	
 	count += 1;	       
@@ -106,6 +108,8 @@ public int countComplexity(str s) {
 // count the number of asserts in the string
 public int countAssert(str s) {
   int count = 0; 
+  // remove comments etc. from the string
+  str cs = cleanString(s);
   // count the number of assert statements
   for (/assert/i := s) {
        count += 1;

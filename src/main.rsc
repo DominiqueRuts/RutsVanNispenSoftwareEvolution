@@ -91,7 +91,7 @@ public void main(str projectName) {
 	
 	// unit testing profile
 	println(" - unit tests (asserts)  : <sum(ProjectStat.tests)> lines, <(sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity)>% (<getRiskRatingUnitTests((sum(ProjectStat.tests)*100)/sum(ProjectStat.complexity))>)");
-	
+
 	// quality profile for unit size
 	RiskProfile ULOC_prof = getRiskProfileUnitLOC(ProjectStat);
 	println(" - unit size             : (<getRiskRatingUnitSize(ULOC_prof)>)");
