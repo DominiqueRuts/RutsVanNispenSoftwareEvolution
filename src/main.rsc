@@ -98,12 +98,12 @@ public void main(str projectName) {
 	// quality profile for unit size
 	RiskProfile ULOC_prof = getRiskProfileUnitLOC(ProjectStat);
 	println(" - unit size             : (<getRiskRatingUnitSize(ULOC_prof)>)");
-	displayProfile(ULOC_prof, sum(ProjectStat.size));
+	displayProfile(ULOC_prof);
 	
 	// quality profile for unit complexity
 	RiskProfile CC_prof = getRiskProfileCC(ProjectStat);
 	println(" - unit complexity       : (<getRiskRatingComplexity(CC_prof)>)");
-	displayProfile(CC_prof, sum(ProjectStat.size));	
+	displayProfile(CC_prof);	
 	println("==============================================");
 
 	// map individual metric ratings to a system score
