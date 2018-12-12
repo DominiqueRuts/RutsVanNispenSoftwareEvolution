@@ -1,3 +1,9 @@
+/*
+ * course : Software Evolution (IM0202) Assignment 1: Software Metrics
+ * authors: Johan van Nispen (836541627) and Dominique Ruts (852059122)
+ * date   : 12/12/2018
+ */
+
 module metrics
 
 import IO;
