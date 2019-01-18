@@ -47,7 +47,7 @@ public int getProjectFilesCount() {
 	return size(files);
 }
 
-str locationPath = "RutsVanNispenSoftwareEvolution/src/output/";
+str locationPath = "RutsVanNispen-SE/src/output/";
    
 public void schrijf(str fileName, value v) {
    writeTextValueFile(|project://<locationPath><fileName>/|, v);
