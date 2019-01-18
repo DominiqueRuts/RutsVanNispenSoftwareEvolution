@@ -1,7 +1,7 @@
 /*
- * course : Software Evolution (IM0202) Assignment 1: Software Metrics
+ * course : Software Evolution (IM0202) Assignment 2: Software Visualization
  * authors: Johan van Nispen (836541627) and Dominique Ruts (852059122)
- * date   : 12/12/2018
+ * date   : 18/01/2019
  */
 
 module filecontroller
@@ -9,8 +9,13 @@ module filecontroller
 import IO;
 import Set;
 import String;
+import ValueIO;
 import util::Resources;
 import lang::java::jdt::m3::Core;
+
+import Type;
+import List;
+import qprofile;
 
 private set[loc] files = {};
 private bool initialLoad = true;
@@ -40,4 +45,18 @@ public set[loc] getProjectFiles(Resource r) {
 // returns the number of relevant files in the project
 public int getProjectFilesCount() {
 	return size(files);
+}
+
+str locationPath = "RutsVanNispenSoftwareEvolution/src/output/";
+   
+public void schrijf(str fileName, value v) {
+   writeTextValueFile(|project://<locationPath><fileName>/|, v);
+}
+
+public int lees(str fileName, type[int] t) {	
+   return readTextValueFile(#int, |project://<locationPath><fileName>/|);
+}
+
+public list[MethodStat] lees(str fileName, type[list[MethodStat]] t) {	
+   return readTextValueFile(#list[MethodStat], |project://<locationPath><fileName>/|);
 }

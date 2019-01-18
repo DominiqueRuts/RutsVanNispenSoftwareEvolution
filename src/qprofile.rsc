@@ -1,7 +1,7 @@
 /*
- * course : Software Evolution (IM0202) Assignment 1: Software Metrics
+ * course : Software Evolution (IM0202) Assignment 2: Software Visualization
  * authors: Johan van Nispen (836541627) and Dominique Ruts (852059122)
- * date   : 12/12/2018
+ * date   : 18/01/2019
  */
 
 module qprofile

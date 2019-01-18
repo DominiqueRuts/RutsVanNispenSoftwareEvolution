@@ -1,7 +1,7 @@
 /*
- * course : Software Evolution (IM0202) Assignment 1: Software Metrics
+ * course : Software Evolution (IM0202) Assignment 2: Software Visualization
  * authors: Johan van Nispen (836541627) and Dominique Ruts (852059122)
- * date   : 12/12/2018
+ * date   : 18/01/2019
  */
 
 module main
@@ -19,13 +19,14 @@ import util::Benchmark;
 import filecontroller;
 import qprofile;
 import metrics;
+import visuals;
 
 // return the largest tuple based on size 
 public bool increasing(tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] x, tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] y ) {
 	return x.size > y.size;
 }
 
-public void main(str projectName) {
+public void main(str projectName, bool executeCalculation) {
 	loc project = getProjectLocation(projectName);
 
 	// list containing all project statistics
@@ -49,37 +50,56 @@ public void main(str projectName) {
 	// add (clean) lines of source code to project code listing
 	ProjectCodeList = getProjectCodeListing(project);
 
-	// for each project method calculate the software metrics	
-	println("Calculating lines of code (unit size), cyclomatic complexity and unit testing coverage...");
-	println("Calculating risk per unit size and risk per unit complexity...");
-	for (<name, b> <- toList(readMethods(project))) {
-		int size = countLOC(name, b);         // calc number of lines of code in method (unit size)
-		int complexity = countComplexity(b);  // calc the cyclomatic complexity (unit complexity)
-		int tests = countAssert(b);           // calc the number of assert statements (unit testing)
+	if (executeCalculation) {	
+		// for each project method calculate the software metrics	
+		println("Calculating lines of code (unit size), cyclomatic complexity and unit testing coverage...");
+		println("Calculating risk per unit size and risk per unit complexity...");
+		for (<name, b> <- toList(readMethods(project))) {
+			int size = countLOC(name, b);         // calc number of lines of code in method (unit size)
+			int complexity = countComplexity(b);  // calc the cyclomatic complexity (unit complexity)
+			int tests = countAssert(b);           // calc the number of assert statements (unit testing)
+			
+			int risk_size = getRiskUnitLOC(size);
+			int risk_cc = getRiskCC(complexity);
+			
+			totalcomplexity += complexity;
+			
+			MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
+			//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
+			ProjectStat += ms;
+		}	
 		
-		int risk_size = getRiskUnitLOC(size);
-		int risk_cc = getRiskCC(complexity);
-		
-		totalcomplexity += complexity;
-		
-		MethodStat ms = <name, size, complexity, tests, risk_size, risk_cc>;
-		//println("size: <ms.size> (<ms.risk_size>) compexity: <ms.complexity> (<ms.risk_cc>)");
-		ProjectStat += ms;
+		schrijf("<projectName>-totalcomplexity.txt",totalcomplexity);
+		schrijf("<projectName>-ProjectStat.txt",ProjectStat);
+	} else {
+		println("Skipping calculation and reading from file (cached calculation)...");
+		totalcomplexity = lees("<projectName>-totalcomplexity.txt", #int);
+		ProjectStat = lees("<projectName>-ProjectStat.txt", #list[MethodStat]);
 	}
 	
-	// calculate code duplication
-	println("Calculating code duplication...");
-	int tdup = countDuplication(ProjectCodeList, threshold);
+	// calculate code duplication	
+	int tdup = 0;
+	if (executeCalculation) {		
+		println("Calculating code duplication...");
+		tdup = countDuplication(ProjectCodeList, threshold);
+		schrijf("<projectName>-duplication.txt",tdup);
+	} else {
+		println("Skipping code duplication calculation and reading from file (cached calculation)...");
+		tdup = lees("<projectName>-duplication.txt", #int);
+	}
 	println("Found <tdup> lines of duplicates in <tot_LOC> lines");
 	
 	// list sorted on method size
-	//list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
+	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
 	//int max = 20;
 	//println("Listing top <max> units (unit size): ");
 	//for (i <- [0..max]) {
 	//	println("method name     : <ProjectStat_sorted_loc[i].name>");
 	//	println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
 	//}
+		
+	//visualize size in treemap
+	visualize(ProjectStat_sorted_loc);
 	
 	// stop clock
 	int tstop = realTime();
