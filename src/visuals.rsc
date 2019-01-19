@@ -78,7 +78,8 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
 Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
 	ProjectFilesStat mFirst = head(pf);
    int n = 1;
-   return vcat([ hcat([ scaleSlider(int() { return 1; },     
+   return hcat ([text("Complexity"),
+   				vcat([ hcat([ scaleSlider(int() { return 1; },     
                                     int () { return maxComplexity; },  
                                     int () { return n; },    
                                     void (int s) { n = s; }, 
@@ -86,6 +87,8 @@ Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
                         text(str () { return "Minimum complexity: <n>";})
                       ], left(),  top(), resizable(false)),  
                  computeFigure(Figure (){ return box(overlay([ellipse(width(toReal(s.complexity)/2), height(toReal(s.complexity)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(color("blue", 0.6)),resizable(false),popup("Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>")) | s <- pf, s.complexity > n-1])); }) //,size(toReal(mFirst.size)*2,toReal(545)*2)); })
+               , grid([[box(text("<g>"),height(30),resizable(false)) | g <- [0..mFirst.size], remainder(toRat(g,100)) == 0]]),
+               text("Size")])
                ]);
 }
 
