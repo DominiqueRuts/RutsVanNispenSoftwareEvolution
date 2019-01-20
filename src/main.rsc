@@ -15,16 +15,12 @@ import String;
 import util::Resources;
 import lang::java::jdt::m3::Core;
 import util::Benchmark;
+import ValueIO;
 
 import filecontroller;
 import qprofile;
 import metrics;
 import visuals;
-
-// project statistics summary
-alias ProjectSummary = tuple[str projectname, int files, int methods, int volume, int vol_rating, int duplication, int dup_rating, 
-		int analysability, int changability, int stability, int testability, int total_rating, 
-		RiskProfile size_profile, int size_rating, RiskProfile cc_profile, int cc_rating];
 	
 // return the largest tuple based on size 
 public bool increasing(tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] x, tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] y ) {
@@ -148,16 +144,20 @@ public void main(str projectName, bool executeCalculation) {
 	println(" - testability           : <ss.testability>");
 	println("==============================================");
 	
-	// save project summary to disc
+	
 	if (executeCalculation) {	
-		println("Saving project summary to disc...");
+		// save project info to disc
+		println("Saving project info to disc...");
 		int tot_rating = (getRisk(ss.analysability) + getRisk(ss.changeability) + getRisk(ss.stability) + getRisk(ss.testability))/4;
 		ProjectSummary ps = <projectName, getProjectFilesCount(), size(ProjectStat.name), tot_LOC, getRisk(getRiskRatingVolume(tot_LOC)), (tdup*100)/tot_LOC, getRisk(getRiskRatingDuplication((tdup*100)/tot_LOC)), 
 			getRisk(ss.analysability), getRisk(ss.changeability), getRisk(ss.stability), getRisk(ss.testability), tot_rating, ULOC_prof, getRisk(getRiskRatingUnitSize(ULOC_prof)), CC_prof, getRisk(getRiskRatingComplexity(CC_prof))>;
 		schrijf("<projectName>-projectsummary.txt", ps);
 	}
 	else {
-		// visualize size in treemap
-		visualize(ProjectStat_sorted_loc);
+		// read project info from disc
+		println("Reading project info from disc...");
+		ProjectSummary ps = readTextValueFile(#ProjectSummary, |project://<locationPath><projectName>-projectsummary.txt/|);
+		// render dashboard  
+		displayDashboard(ps);
 	}
 }

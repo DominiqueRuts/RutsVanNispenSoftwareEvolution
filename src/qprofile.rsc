@@ -13,6 +13,11 @@ alias MethodStat = tuple[loc name, int size, int complexity, int tests, int risk
 alias RiskProfile = tuple[int low, int moderate, int high, int very_high, int low_per, int moderate_per, int high_per, int very_high_per];
 alias SystemScore = tuple[str analysability, str changeability, str stability, str testability];
 
+// project statistics summary
+alias ProjectSummary = tuple[str projectname, int files, int methods, int volume, int vol_rating, int duplication, int dup_rating, 
+		int analysability, int changability, int stability, int testability, int total_rating, 
+		RiskProfile size_profile, int size_rating, RiskProfile cc_profile, int cc_rating];
+
 public str getRiskRatingVolume(int lines) {
 	// catagorize the project volume risk (for java projects), taken from: 
 	// I. Heitlager, T. Kuipers, and J. Visser. A practical model for measuring maintainability. 

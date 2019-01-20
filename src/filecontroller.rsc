@@ -20,6 +20,9 @@ import qprofile;
 private set[loc] files = {};
 private bool initialLoad = true;
 
+// project default location setting for file output
+public str locationPath = "RutsVanNispenSoftwareEvolution/src/output/";
+
 // return the project loc based on the project name
 public loc getProjectLocation(str projectName) {
 	initialLoad = true;
@@ -46,9 +49,6 @@ public set[loc] getProjectFiles(Resource r) {
 public int getProjectFilesCount() {
 	return size(files);
 }
-
-// project default location setting for file output
-str locationPath = "RutsVanNispenSoftwareEvolution/src/output/";
    
 public void schrijf(str fileName, value v) {
    writeTextValueFile(|project://<locationPath><fileName>/|, v);
