@@ -80,7 +80,7 @@ Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
    int n = 1;
    return vcat([ text("Complexity distribution per Java file"),
    			hcat ([text("Complexity"),
-   				grid([[box(text("<g>"),height(30),resizable(false), left(),lineWidth(0))] | g <- [max(pf.complexity)..0], remainder(toRat(g,50)) == 0]),
+   				
    				vcat([ hcat([ text(str () { return "Minimum complexity filter: <n>";}),
    				 				scaleSlider(int() { return 1; },     
                                     int () { return maxComplexity; },  
@@ -89,7 +89,10 @@ Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
                                     width(500))
                        
                       ], left(),  top(), resizable(false)),  
-                 computeFigure(Figure (){ return box(overlay([ellipse(width(toReal(s.complexity)/2), height(toReal(s.complexity)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(color("blue", 0.6)),resizable(false),popup("Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>")) | s <- pf, s.complexity > n-1])); }) //,size(toReal(mFirst.size)*2,toReal(545)*2)); })
+                      hcat([grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [max(pf.complexity)..0], remainder(toRat(g,50)) == 0]),
+                      computeFigure(Figure (){ return box(overlay([ellipse(width(toReal(s.complexity)/2), height(toReal(s.complexity)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(color("blue", 0.6)),resizable(false),popup("Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>")) | s <- pf, s.complexity > n-1])); }) //,size(toReal(mFirst.size)*2,toReal(545)*2)); })
+                      ])
+                 
                , grid([[box(text("<g>"),height(30),resizable(false), left(),lineWidth(0)) | g <- [0..mFirst.size], remainder(toRat(g,100)) == 0]]),
                text("Size")])
                ])
