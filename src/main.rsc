@@ -21,6 +21,11 @@ import qprofile;
 import metrics;
 import visuals;
 
+// project statistics summary
+alias ProjectSummary = tuple[str projectname, int files, int methods, int volume, int vol_rating, int duplication, int dup_rating, 
+		int analysability, int changability, int stability, int testability, int total_rating, 
+		RiskProfile size_profile, int size_rating, RiskProfile cc_profile, int cc_rating];
+	
 // return the largest tuple based on size 
 public bool increasing(tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] x, tuple[loc name, int size, int complexity, int tests, int risk_size, int risk_cc] y ) {
 	return x.size > y.size;
@@ -69,8 +74,8 @@ public void main(str projectName, bool executeCalculation) {
 			ProjectStat += ms;
 		}	
 		
-		schrijf("<projectName>-totalcomplexity.txt",totalcomplexity);
-		schrijf("<projectName>-ProjectStat.txt",ProjectStat);
+		schrijf("<projectName>-totalcomplexity.txt", totalcomplexity);
+		schrijf("<projectName>-ProjectStat.txt", ProjectStat);
 	} else {
 		println("Skipping calculation and reading from file (cached calculation)...");
 		totalcomplexity = lees("<projectName>-totalcomplexity.txt", #int);
@@ -82,7 +87,7 @@ public void main(str projectName, bool executeCalculation) {
 	if (executeCalculation) {		
 		println("Calculating code duplication...");
 		tdup = countDuplication(ProjectCodeList, threshold);
-		schrijf("<projectName>-duplication.txt",tdup);
+		schrijf("<projectName>-duplication.txt", tdup);
 	} else {
 		println("Skipping code duplication calculation and reading from file (cached calculation)...");
 		tdup = lees("<projectName>-duplication.txt", #int);
@@ -91,16 +96,15 @@ public void main(str projectName, bool executeCalculation) {
 	
 	// list sorted on method size
 	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
-	//int max = 20;
+	
+	//int max = 50;
 	//println("Listing top <max> units (unit size): ");
 	//for (i <- [0..max]) {
-	//	println("method name     : <ProjectStat_sorted_loc[i].name>");
-	//	println("size:complexity : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
+	//	println("method name       : <ProjectStat_sorted_loc[i].name>");
+	//	println("size:complexity   : <ProjectStat_sorted_loc[i].size>:<ProjectStat_sorted_loc[i].complexity>");
+	//	println("risk_size:risk_cc : <ProjectStat_sorted_loc[i].risk_size>:<ProjectStat_sorted_loc[i].risk_cc>");
 	//}
-		
-	//visualize size in treemap
-	visualize(ProjectStat_sorted_loc);
-	
+
 	// stop clock
 	int tstop = realTime();
 
@@ -143,4 +147,17 @@ public void main(str projectName, bool executeCalculation) {
 	println(" - stability             : <ss.stability>");
 	println(" - testability           : <ss.testability>");
 	println("==============================================");
+	
+	// save project summary to disc
+	if (executeCalculation) {	
+		println("Saving project summary to disc...");
+		int tot_rating = (getRisk(ss.analysability) + getRisk(ss.changeability) + getRisk(ss.stability) + getRisk(ss.testability))/4;
+		ProjectSummary ps = <projectName, getProjectFilesCount(), size(ProjectStat.name), tot_LOC, getRisk(getRiskRatingVolume(tot_LOC)), (tdup*100)/tot_LOC, getRisk(getRiskRatingDuplication((tdup*100)/tot_LOC)), 
+			getRisk(ss.analysability), getRisk(ss.changeability), getRisk(ss.stability), getRisk(ss.testability), tot_rating, ULOC_prof, getRisk(getRiskRatingUnitSize(ULOC_prof)), CC_prof, getRisk(getRiskRatingComplexity(CC_prof))>;
+		schrijf("<projectName>-projectsummary.txt", ps);
+	}
+	else {
+		// visualize size in treemap
+		visualize(ProjectStat_sorted_loc);
+	}
 }

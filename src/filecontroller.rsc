@@ -47,6 +47,7 @@ public int getProjectFilesCount() {
 	return size(files);
 }
 
+// project default location setting for file output
 str locationPath = "RutsVanNispenSoftwareEvolution/src/output/";
    
 public void schrijf(str fileName, value v) {
