@@ -90,7 +90,8 @@ Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
                        
                       ], left(),  top(), resizable(false)),  
                       hcat([grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [max(pf.complexity)..0], remainder(toRat(g,50)) == 0]),
-                      computeFigure(Figure (){ return box(overlay([ellipse(width(toReal(s.complexity)/2), height(toReal(s.complexity)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(color("blue", 0.6)),resizable(false),popup("Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>")) | s <- pf, s.complexity > n-1])); }) //,size(toReal(mFirst.size)*2,toReal(545)*2)); })
+                      computeFigure(Figure (){ return box(overlay([createEllipse(mFirst, s) | s <- pf, s.complexity > n-1, s.maxriskcc == getVeryHighRisk() || s.maxriskcc == getHighRisk() || s.maxriskcc == getModerateRisk() || s.maxriskcc == getLowRisk() || getDefaultRisk() == 0])); }), //,size(toReal(mFirst.size)*2,toReal(545)*2)); })
+                      check()
                       ])
                  
                , grid([[box(text("<g>"),height(30),resizable(false), left(),lineWidth(0)) | g <- [0..mFirst.size], remainder(toRat(g,100)) == 0]]),
@@ -99,45 +100,107 @@ Figure scaledCircles(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
-//alias ProjectFilesStats = list[tuple[str file, str name, int size, int complexity]];
-alias ProjectFilesStats = list[tuple[str file, int size, int complexity]];
-alias ProjectFilesStat = tuple[str file, int size, int complexity];
+
+Figure createEllipse(ProjectFilesStat mFirst, ProjectFilesStat s) {
+	return ellipse(width(toReal(s.methodCount)/2), height(toReal(s.methodCount)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(getRiskColor(s.maxriskcc)),resizable(false),popup(ellipsePopupText(s)));
+}
+
+public int getDefaultRisk() {
+	if (veryHighRisk)  return 4; 
+	if (highRisk)  return 3;
+	if (moderateRisk)  return 2;
+	if (lowRisk) return 1;
+	return 0;
+}
+
+public int getVeryHighRisk() {
+	if (veryHighRisk)  return 4; 
+	return 0;
+}
+
+public int getHighRisk() {
+	if (highRisk)  return 3; 
+	return 0;
+}
+
+public int getModerateRisk() {
+	if (moderateRisk)  return 2; 
+	return 0;
+}
+
+public int getLowRisk() {
+	if (lowRisk)  return 1; 
+	return 0;
+}
+
+public Color getRiskColor(int risk) {
+	if (risk == 4)  return color("red",0.6); 
+	if (risk == 3)  return color("orange",0.6);
+	if (risk == 2)  return color("blue",0.6);
+	if (risk == 1) return color("green",0.6);
+	return Color("grey");
+}
+
+private bool veryHighRisk = false;
+private bool highRisk = false;
+private bool moderateRisk = false;
+private bool lowRisk = false;
+
+public Figure check(){
+  bool state = false;
+  return vcat([ checkbox("4 - Very High Risk", void(bool s4){ state = s4; if(s4) {veryHighRisk = true; } else {veryHighRisk = false;}}),
+  				checkbox("3 - High Risk", void(bool s3){ state = s3; if(s3) {highRisk = true; } else {highRisk = false;}}),
+  				checkbox("2 - Moderate Risk", void(bool s2){ state = s2; if(s2) {moderateRisk = true; } else {moderateRisk = false;}}),
+  				checkbox("1 - Low Risk", void(bool s1){ state = s1; if(s1) {lowRisk = true; } else {lowRisk = false;}})
+              ], width(100), resizable(false));
+}
+
+private str ellipsePopupText(ProjectFilesStat s) {
+	return "Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity> \nMethods: <s.methodCount>";
+}
+
+alias ProjectFilesStats = list[tuple[str file, int size, int complexity, int methodCount, int riskcc, int maxriskcc]];
+alias ProjectFilesStat = tuple[str file, int size, int complexity, int methodCount, int riskcc, int maxriskcc];
 alias ProjectFilesSize = map[str file, int size];
+alias ProjectFilesMethods = map[str file, int methods];
+alias ProjectFilesRiskCC = map[str file, int riskCC];
+alias ProjectFilesMaxRiskCC = map[str file, int maxriskcc];
 alias ProjectFilesComplexity = map[str file, int complexity];
 
 private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
 	ProjectFilesStats pfs = [];
 	ProjectFilesSize pfsize = ();
+	ProjectFilesMethods pfmethods = ();
+	ProjectFilesRiskCC pfriskcc = ();
+	ProjectFilesMaxRiskCC pfmaxriskcc = ();
 	ProjectFilesComplexity pfcomplexity = ();
 	
 	for (s <- ProjectStat_sorted_loc) {
-		//pfs += <getFileName(s.name), clearString(s.name), s.size, s.complexity>;
 		if(getFileName(s.name) in pfsize) {			
 			pfsize[getFileName(s.name)] = pfsize[getFileName(s.name)] + s.size;
+			pfmethods[getFileName(s.name)] += 1;
+			pfriskcc[getFileName(s.name)] += s.risk_cc;			
+			pfmaxriskcc[getFileName(s.name)] =  pfmaxriskcc[getFileName(s.name)] > s.risk_cc ? pfmaxriskcc[getFileName(s.name)] : s.risk_cc;
 			pfcomplexity[getFileName(s.name)] = pfcomplexity[getFileName(s.name)] + s.complexity;
 		} else {
 			pfsize[getFileName(s.name)] = s.size;
+			pfmethods[getFileName(s.name)] = 1;
+			pfriskcc[getFileName(s.name)] = s.risk_cc;
+			pfmaxriskcc[getFileName(s.name)] = s.risk_cc;
 			pfcomplexity[getFileName(s.name)] = s.complexity;
 		}
 	}
 	
 	for (pf <- pfsize) {
-		pfs += <pf, pfsize[pf], pfcomplexity[pf]>;
-		//println("<pf> - <pfsize[pf]> - <pfcomplexity[pf]>");
+		pfs += <pf, pfsize[pf], pfcomplexity[pf], pfmethods[pf], pfriskcc[pf], pfmaxriskcc[pf]>;
 	}
 	
 	pfs = sort(pfs, increasing2);
 	
-	//m = ();
-	//for (pfs <- ProjectStat_sorted_loc) {
-	//str f = getFileName(s.name);
-  	// m[f]?[] += [s.size];
-	//}
-	//println(m);
  return pfs;
 }
 
-public bool increasing2(tuple[str name, int size, int complexity] x, tuple[str name, int size, int complexity] y ) {
+public bool increasing2(tuple[str name, int size, int complexity, int methodCount, int riskcc, int maxriskcc] x, tuple[str name, int size, int complexity, int methodCount, int riskcc, int maxriskcc] y ) {
 	return x.size > y.size;
 }
 
