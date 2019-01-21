@@ -35,8 +35,8 @@ public void displayDashboard(ProjectSummary psum) {
 
 public Figure getTop(ProjectSummary psum) {
 	str pname = "Project Overview \'" +  psum.projectname + "\'";	
-	Figure b1  = box( text(pname, fontSize(20), fontBold(true)), std(halign(0.1)) );
-	Figure b2a = box( text("Overall Rating", fontSize(20), fontBold(true)) );
+	Figure b1  = box( text(pname, fontSize(20), fontBold(true)), std(halign(0.075)) );
+	Figure b2a = box( text("Overall Rating", fontSize(20), fontBold(true)), std(halign(0.3)) );
 	Figure b2b = getRating(psum.total_rating);
 	Figure b2  = box( hcat([b2a, b2b]) );
 	
@@ -45,7 +45,7 @@ public Figure getTop(ProjectSummary psum) {
 }
 
 public Figure getMiddleTop() {
-	Figure b1 = box( text("Code Metrics", fontSize(20)), std(halign(0.05)) );
+	Figure b1 = box( text("Code Metrics (SiG Criteria)", fontSize(20)), std(halign(0.06)) );
 	Figure b2 = box( text("ISO9126 Quality Rating", fontSize(20)), std(halign(0.1)) );
 	
 	//return box(hcat([b1, b2]), std(right()), vshrink(0.1), fillColor("white"));
@@ -62,11 +62,11 @@ public Figure getMiddleBottom(ProjectSummary psum) {
 
 public Figure getBottomTop() {	
 	Figure b1 = box( text("Unit Size", fontSize(20)) );
-	Figure b2 = box( text("Unit Complexity", fontSize(20), left()) );
-	Figure b3 = box( text("Architecture", fontSize(20), left()) );
+	Figure b2 = box( text("Unit Complexity", fontSize(20), halign(0.05)) );
+	Figure b3 = box( text("Architecture", fontSize(20), halign(0.03)) );
 	
 	//return box(hcat([b1, b2, b3]), std(halign(0.1)), vshrink(0.1), fillColor("white"));
-	return box(hcat([b1, b2, b3]), std(halign(0.1)), vshrink(0.1), std(fontBold(true)), fillColor("white"), std(lineColor("white")));
+	return box(hcat([b1, b2, b3]), std(halign(0.05)), vshrink(0.1), std(fontBold(true)), fillColor("white"), std(lineColor("white")));
 }
 
 alias ScaleTable = tuple[real s_low, real s_mod, real s_hig, real s_vhi, real a_low, real a_mod, real a_hig, real a_vhi];
@@ -74,29 +74,31 @@ alias ScaleTable = tuple[real s_low, real s_mod, real s_hig, real s_vhi, real a_
 public Figure getBottom(ProjectSummary psum) {
 
 	// calculate scaling and offset for size diagram
-	ScaleTable st = getScaling(psum.size_profile, 0.15);
+	ScaleTable st = getScaling(psum.size_profile, 0.1);
 		
-    Figure L = overlay([box(hshrink(st.s_low), halign(st.a_low), fillColor("Green"), lineColor("Green"), popup("low risk: <psum.size_profile.low_per>%")), 
-							  box(hshrink(st.s_mod), halign(st.a_mod), fillColor("Yellow"), lineColor("Yellow"), popup("moderate risk: <psum.size_profile.moderate_per>%")),
-							  box(hshrink(st.s_hig), halign(st.a_hig), fillColor("Orange"), lineColor("Orange"), popup("high risk: <psum.size_profile.high_per>%")),
-							  box(hshrink(st.s_vhi), halign(st.a_vhi), fillColor("Red"), lineColor("Red"), popup("very high risk: <psum.size_profile.very_high_per>%"))
- 					   ]);
+    Figure L0 = box(hshrink(0.015), fillColor("white"));
                      
+    Figure L = hcat([box(hshrink(st.s_low), fillColor("Green"), lineColor("Green"), popup("low risk: <psum.size_profile.low_per>%")), 
+					 box(hshrink(st.s_mod), fillColor("Yellow"), lineColor("Yellow"), popup("moderate risk: <psum.size_profile.moderate_per>%")),
+					 box(hshrink(st.s_hig), fillColor("Orange"), lineColor("Orange"), popup("high risk: <psum.size_profile.high_per>%")),
+					 box(hshrink(st.s_vhi), fillColor("Red"), lineColor("Red"), popup("very high risk: <psum.size_profile.very_high_per>%"))
+ 					 ]);
+ 	
 	// calculate scaling and offset for complexity diagram
-	st = getScaling(psum.cc_profile, 0.15);
+	st = getScaling(psum.cc_profile, 0.1);
 	
-	Figure C = overlay([box(hshrink(st.s_low), halign(st.a_low), fillColor("Green"), lineColor("Green"), popup("low risk: <psum.cc_profile.low_per>%")), 
-							  box(hshrink(st.s_mod), halign(st.a_mod), fillColor("Yellow"), lineColor("Yellow"), popup("moderate risk: <psum.cc_profile.moderate_per>%")),
-							  box(hshrink(st.s_hig), halign(st.a_hig), fillColor("Orange"), lineColor("Orange"), popup("high risk: <psum.cc_profile.high_per>%")),
-							  box(hshrink(st.s_vhi), halign(st.a_vhi), fillColor("Red"), lineColor("Red"), popup("very high risk: <psum.cc_profile.very_high_per>%"))
-							 ]);
+	Figure C = hcat([box(hshrink(st.s_low), fillColor("Green"), lineColor("Green"), popup("low risk: <psum.cc_profile.low_per>%")), 
+					 box(hshrink(st.s_mod), fillColor("Yellow"), lineColor("Yellow"), popup("moderate risk: <psum.cc_profile.moderate_per>%")),
+					 box(hshrink(st.s_hig), fillColor("Orange"), lineColor("Orange"), popup("high risk: <psum.cc_profile.high_per>%")),
+					 box(hshrink(st.s_vhi), fillColor("Red"), lineColor("Red"), popup("very high risk: <psum.cc_profile.very_high_per>%"))
+					]);
 							 
 	Figure R = vcat([box(text("Files		: <psum.files>", fontSize(20)), std(left())), 
 					 box(text("Methods	: <psum.methods>", fontSize(20)), std(left())), 
 					 box(text("Lines of Code	: <psum.volume>", fontSize(20)), std(left()))]);
 	
 	//return box(hcat([L, C, R]), vshrink(0.25), fillColor("white"));
-	return box(hcat([L, C, R]), vshrink(0.25), fillColor("white"), std(lineColor("white")));
+	return box(hcat([L0, L, C, R]), vshrink(0.25), fillColor("white"), std(lineColor("white")));
 }
 
 public ScaleTable getScaling(RiskProfile rp, real offset) {
@@ -121,9 +123,9 @@ public ScaleTable getScaling(RiskProfile rp, real offset) {
 public Figure getBottomBottom() {	
 	int a = 150, b = 30, n = 0;
 	 
-	Figure b1 = button("View Size", void(){n += 1;}, halign(0.1), size(a, b), resizable(false, false));
-	Figure b2 = button("View Complexity", void(){n += 1;}, halign(0.0), size(a, b), resizable(false, false));
-	Figure b3 = button("View Filetree", void(){n += 1;}, halign(0.0), size(a, b), resizable(false, false));
+	Figure b1 = button("View Size", void(){n += 1;}, halign(0.075), size(a, b), resizable(false, false));
+	Figure b2 = button("View Complexity", void(){n += 1;}, halign(0.05), size(a, b), resizable(false, false));
+	Figure b3 = button("View Filetree", void(){n += 1;}, halign(0.03), size(a, b), resizable(false, false));
 	
 	//return box(hcat([b1, b2, b3]), vshrink(0.1), fillColor("white"));
 	return box(hcat([b1, b2, b3]), vshrink(0.1), fillColor("white"), std(lineColor("white")));
