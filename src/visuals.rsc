@@ -67,7 +67,7 @@ Figure scaledCircles(ProjectFilesStats pf){
 	int maxComplexity = max(pf.complexity);
 	maxComplexityLog = log(maxComplexity,2);
 
-   return vcat([ text("Complexity distribution per Java file"),
+   return vcat([ text("Complexity distribution", fontSize(20), fontBold(true)),
    			hcat ([text("Method count", textAngle(270)),
    				
    				vcat([ hcat([ text(str () { return "Minimum total complexity:";}),
@@ -94,7 +94,7 @@ Figure scaledCircles(ProjectFilesStats pf){
 }
 
 Figure createEllipse(ProjectFilesStat mFirst, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
-	return ellipse(size(log(s.complexity*2,2)/maxComplexityLog*40), align(log(s.size,2)/log(mFirst.size, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),lineStyle(getRiskLineStyle(s.maxriskcc)),lineWidth(getRiskLineWidth(s.maxriskcc)),resizable(false),ellipseMouseDown(s));
+	return ellipse(size(sqrt(s.complexity)*3), align(log(s.size,2)/log(mFirst.size, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),lineStyle(getRiskLineStyle(s.maxriskcc)),lineWidth(getRiskLineWidth(s.maxriskcc)),resizable(false),ellipseMouseDown(s));
 }
 
 public int getDefaultRisk() {
