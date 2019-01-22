@@ -104,19 +104,18 @@ Figure scaledCircles(ProjectFilesStats pf){
 						//complexityfield()                       
 					], left(),  top(), resizable(false)),  
 					hcat([
-						createYAxis(maxMethodCount),//grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [maxMethodCount..0], remainder(toRat(g,20)) == 0], vgap(30)),
-						vcat([
-							computeFigure(Figure (){ return box(overlay([createEllipse(maxFileSize, maxMethodCount, maxComplexity, s) | s <- pf, s.complexity > complexityFilter-1, s.maxriskcc == getVeryHighRisk() || s.maxriskcc == getHighRisk() || s.maxriskcc == getModerateRisk() || s.maxriskcc == getLowRisk() || getDefaultRisk() == 0])); }), 
-							createXAxis(maxFileSize),
-							 text("Size (Lines of Code)")
-						],gap(2)),
+						grid(
+							[
+								[createYAxis(maxMethodCount), createBubbleChart(maxFileSize, maxMethodCount, maxComplexity, pf)],
+								[box(width(20),resizable(false), left()), createXAxis(maxFileSize)]						
+						],resizable(true), left(), gap(2)),
 						vcat([
 							check(),
 							checkColorBlind()
 						],resizable(false),top(),left(),gap(5))                   
 					], top(),gap(2))                
 				],gap(2))
-			]),computeFigure(Figure (){ return fileDetails();}) 
+			]),text("Size (Lines of Code)"),computeFigure(Figure (){ return fileDetails();}) 
 		],gap(20));
 }
 
@@ -133,7 +132,11 @@ Figure createXAxis(int max) {
 }
 
 Figure createYAxis(int max) {
-	return grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [max..0], remainder(toRat(g,20)) == 0], vgap(30));
+	return grid([[box(text("<g>-"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [max..0], remainder(toRat(g,20)) == 0], vgap(30),resizable(false), left());
+}
+
+Figure createBubbleChart(int maxFileSize, int maxMethodCount, int maxComplexity, ProjectFilesStats pf) {
+	return computeFigure(Figure (){ return box(overlay([createEllipse(maxFileSize, maxMethodCount, maxComplexity, s) | s <- pf, s.complexity > complexityFilter-1, s.maxriskcc == getVeryHighRisk() || s.maxriskcc == getHighRisk() || s.maxriskcc == getModerateRisk() || s.maxriskcc == getLowRisk() || getDefaultRisk() == 0])); });
 }
 
 Figure createEllipse(int maxFileSize, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
@@ -224,9 +227,9 @@ public Figure fileDetails(){
   				text("Total Complexity (sum):",left(),width(250)),
   				text("<clickedFileStat.complexity == 0 ? "" : clickedFileStat.complexity>",left())],
   				[text("Number of methods:",left(),width(250)),
-  				text("<clickedFileStat.methodCount == 0 ? "" : clickedFileStat.methodCount>",left())//,
-  				//text("Path:",left(),width(250)),
-  				//text("<clickedFileStat.methodCount>",left())
+  				text("<clickedFileStat.methodCount == 0 ? "" : clickedFileStat.methodCount>",left()),
+  				text("Lines of Code:",left(),width(250)),
+  				text("<clickedFileStat.size>",left())
               ]],left(),width(750))
               ]],top(),left(),resizable(false));
 }
