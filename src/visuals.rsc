@@ -21,6 +21,32 @@ import Set;
 import util::Math;
 import IO;
 
+// defined types to hold visualization data
+alias ProjectFilesStats = list[tuple[str file, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc]];
+alias ProjectFilesStat = tuple[str file, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc];
+alias ProjectFilesPath = map[str file, str path];
+alias ProjectFilesSize = map[str file, int size];
+alias ProjectFilesMethods = map[str file, int methods];
+alias ProjectFilesRiskCC = map[str file, int riskCC];
+alias ProjectFilesMaxRiskCC = map[str file, int maxriskcc];
+alias ProjectFilesComplexity = map[str file, int complexity];
+
+private int complexityFilter = 1;
+private real maxComplexityLog = 0.0;
+// private variables to identify which Risk CC checkbox is checked
+private bool veryHighRisk = false;
+private bool highRisk = false;
+private bool moderateRisk = false;
+private bool lowRisk = false;
+// private variables to enable Accessibility mode
+private bool colorblindview = false;
+private str veryHighRiskStyle = "solid";
+private str highRiskStyle = "solid";
+private str moderateRiskStyle = "solid";
+private str lowRiskStyle = "solid";
+// private variable to hold the clicked bubble details
+private ProjectFilesStat clickedFileStat = <"", "", 0, 0, 0, 0, 0>;
+
 public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 	println("Start visualization...");
 	ProjectFilesStats pfsRender = getProjectFileStats(ProjectStat_sorted_loc);
@@ -59,43 +85,62 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
-private real maxComplexityLog = 0.0;
+
 
 Figure scaledCircles(ProjectFilesStats pf){
-	ProjectFilesStat mFirst = head(pf);
+	int maxFileSize = max(pf.size);
 	int maxMethodCount = max(pf.methodCount);
 	int maxComplexity = max(pf.complexity);
 	maxComplexityLog = log(maxComplexity,2);
 
-   return vcat([ text("Complexity distribution", fontSize(20), fontBold(true)),
-   			hcat ([text("Method count", textAngle(270)),
-   				
-   				vcat([ hcat([ text(str () { return "Minimum total complexity:";}),
-   				 				scaleSlider(int() { return 1; },     
-                                    int () { return maxComplexity; },  
-                                    int () { return complexityFilter; },    
-                                    void (int s) { complexityFilter = s; }, 
-                                    width(500))//,
-                                    //complexityfield()
-                       
-                      ], left(),  top(), resizable(false)),  
-                      hcat([grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [maxMethodCount..0], remainder(toRat(g,20)) == 0], vgap(30)),
-                      vcat([computeFigure(Figure (){ return box(overlay([createEllipse(mFirst, maxMethodCount, maxComplexity, s) | s <- pf, s.complexity > complexityFilter-1, s.maxriskcc == getVeryHighRisk() || s.maxriskcc == getHighRisk() || s.maxriskcc == getModerateRisk() || s.maxriskcc == getLowRisk() || getDefaultRisk() == 0])); }), 
-                      grid([[box(text("|\n<toInt(pow(2,round(g)))>",ialign(0.5)),height(30),gap(1),resizable(false), left(),lineWidth(0)) | g <- [0.. log(mFirst.size,2)]]]),
-              			 text("Size (Lines of Code)")
-                      ],gap(2)),
-                      vcat([check() ,
-                       checkColorBlind()
-                      ],resizable(false),top(),left(),gap(5))                   
-                      ], top(),gap(2))                
-               ],gap(2))
-               ]),computeFigure(Figure (){ return fileDetails();}) 
-               ],gap(20));
+   return vcat([
+			text("Complexity distribution", fontSize(20), fontBold(true)),
+   			hcat ([
+   				text("Method count", textAngle(270)),   				
+   				vcat([
+   					hcat([
+   						text(str () { return "Minimum total complexity: <complexityFilter>";}),
+   				 		createComplexitySlider(maxComplexity)//,
+						//complexityfield()                       
+					], left(),  top(), resizable(false)),  
+					hcat([
+						createYAxis(maxMethodCount),//grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [maxMethodCount..0], remainder(toRat(g,20)) == 0], vgap(30)),
+						vcat([
+							computeFigure(Figure (){ return box(overlay([createEllipse(maxFileSize, maxMethodCount, maxComplexity, s) | s <- pf, s.complexity > complexityFilter-1, s.maxriskcc == getVeryHighRisk() || s.maxriskcc == getHighRisk() || s.maxriskcc == getModerateRisk() || s.maxriskcc == getLowRisk() || getDefaultRisk() == 0])); }), 
+							createXAxis(maxFileSize),
+							 text("Size (Lines of Code)")
+						],gap(2)),
+						vcat([
+							check(),
+							checkColorBlind()
+						],resizable(false),top(),left(),gap(5))                   
+					], top(),gap(2))                
+				],gap(2))
+			]),computeFigure(Figure (){ return fileDetails();}) 
+		],gap(20));
 }
 
-Figure createEllipse(ProjectFilesStat mFirst, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
-	return ellipse(size(sqrt(s.complexity)*3), align(log(s.size,2)/log(mFirst.size, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),lineStyle(getRiskLineStyle(s.maxriskcc)),lineWidth(getRiskLineWidth(s.maxriskcc)),resizable(false),ellipseMouseDown(s));
+Figure createComplexitySlider(int max) {
+	return scaleSlider(int() { return 1; },     
+                                    int () { return max; },  
+                                    int () { return complexityFilter; },    
+                                    void (int s) { complexityFilter = s; }, 
+                                    width(500));
 }
+
+Figure createXAxis(int max) {
+	return grid([[box(text("|\n<toInt(pow(2,round(g)))>",ialign(0.5)),height(30),gap(1),resizable(false), left(),lineWidth(0)) | g <- [0.. log(max,2)]]]);
+}
+
+Figure createYAxis(int max) {
+	return grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [max..0], remainder(toRat(g,20)) == 0], vgap(30));
+}
+
+Figure createEllipse(int maxFileSize, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
+	return ellipse(size(sqrt(s.complexity)*3), align(log(s.size,2)/log(maxFileSize, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),lineStyle(getRiskLineStyle(s.maxriskcc)),lineWidth(getRiskLineWidth(s.maxriskcc)),resizable(false),ellipseMouseDown(s));
+}
+
+
 
 public int getDefaultRisk() {
 	if (veryHighRisk)  return 4; 
@@ -133,14 +178,10 @@ public Color getRiskColor(int risk) {
 	return color("grey");
 }
 
-private bool veryHighRisk = false;
-private bool highRisk = false;
-private bool moderateRisk = false;
-private bool lowRisk = false;
 
 public Figure check(){
   bool state = false;
-  return vcat([ text("Filter risk level:",left(), width(150)),
+  return vcat([ text("Filter CC risk level:",left(), width(150)),
   				checkbox("4 - Very High Risk", void(bool s4){ state = s4; if(s4) {veryHighRisk = true; } else {veryHighRisk = false;}},fillColor("red"),left(), width(150), resizable(false)),
   				checkbox("3 - High Risk", void(bool s3){ state = s3; if(s3) {highRisk = true; } else {highRisk = false;}},fillColor("orange"),left(), width(150), resizable(false)),
   				checkbox("2 - Moderate Risk", void(bool s2){ state = s2; if(s2) {moderateRisk = true; } else {moderateRisk = false;}},fillColor("yellow"),left(), width(150), resizable(false)),
@@ -160,11 +201,7 @@ public int getRiskLineWidth(int risk) {
 	return colorblindview ? risk : 1;
 }
 
-private bool colorblindview = false;
-private str veryHighRiskStyle = "solid";
-private str highRiskStyle = "solid";
-private str moderateRiskStyle = "solid";
-private str lowRiskStyle = "solid";
+
 
 public Figure checkColorBlind(){
   bool colorblind = false;
@@ -173,7 +210,7 @@ public Figure checkColorBlind(){
               ], width(150), resizable(false),top());
 }
 
-private ProjectFilesStat clickedFileStat = <"", "", 0, 0, 0, 0, 0>;
+
 
 public Figure fileDetails(){
   bool state = false;
@@ -182,19 +219,19 @@ public Figure fileDetails(){
   				text("<clickedFileStat.file>",left()),
   				text("Path:",left(),width(250)),
   				text("<clickedFileStat.path>",left())],
-  				[text("Max. Risk Level:",left(),width(250)),
-  				text("<clickedFileStat.maxriskcc>",left()),
+  				[text("Max. CC Risk Level:",left(),width(250)),
+  				text("<clickedFileStat.maxriskcc == 0 ? "" : clickedFileStat.maxriskcc>",left()),
   				text("Total Complexity (sum):",left(),width(250)),
-  				text("<clickedFileStat.complexity>",left())],
+  				text("<clickedFileStat.complexity == 0 ? "" : clickedFileStat.complexity>",left())],
   				[text("Number of methods:",left(),width(250)),
-  				text("<clickedFileStat.methodCount>",left()),
-  				text("Path:",left(),width(250)),
-  				text("<clickedFileStat.methodCount>",left())
+  				text("<clickedFileStat.methodCount == 0 ? "" : clickedFileStat.methodCount>",left())//,
+  				//text("Path:",left(),width(250)),
+  				//text("<clickedFileStat.methodCount>",left())
               ]],left(),width(750))
               ]],top(),left(),resizable(false));
 }
 
-private int complexityFilter = 1;
+
 
 public Figure complexityfield(){
   return vcat([ box(textfield("<complexityFilter>", void(str s){ complexityFilter = toInt(s);}, fillColor("yellow")), fillColor("yellow"),width(50), resizable(false))
@@ -205,14 +242,7 @@ private str ellipsePopupText(ProjectFilesStat s) {
 	return "Object: <s.file> \nLines of Code: <s.size> \nComplexity: <s.complexity> \nMethods: <s.methodCount>";
 }
 
-alias ProjectFilesStats = list[tuple[str file, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc]];
-alias ProjectFilesStat = tuple[str file, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc];
-alias ProjectFilesPath = map[str file, str path];
-alias ProjectFilesSize = map[str file, int size];
-alias ProjectFilesMethods = map[str file, int methods];
-alias ProjectFilesRiskCC = map[str file, int riskCC];
-alias ProjectFilesMaxRiskCC = map[str file, int maxriskcc];
-alias ProjectFilesComplexity = map[str file, int complexity];
+
 
 private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
 	ProjectFilesStats pfs = [];
@@ -246,15 +276,9 @@ private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorte
 		pfs += <pf, pfpath[pf], pfsize[pf], pfcomplexity[pf], pfmethods[pf], pfriskcc[pf], pfmaxriskcc[pf]>;
 	}
 	
-	pfs = sort(pfs, increasing2);
 	
  return pfs;
 }
-
-public bool increasing2(tuple[str name, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc] x, tuple[str name, str path, int size, int complexity, int methodCount, int riskcc, int maxriskcc] y ) {
-	return x.size > y.size;
-}
-
 
 private str getFileName(loc s) {
 	str inputString = s.path;
