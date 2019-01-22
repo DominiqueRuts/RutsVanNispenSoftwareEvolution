@@ -39,10 +39,7 @@ public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 	//render(scaledbox(max(pfsRender.complexity), pfsRender));
 	
 	
-	//e1 = circles(ProjectStat_sorted_loc);
-	e1 = circles(pfsRender);
-	
-	//render(e1);
+
 	render("Complexity view", scaledCircles(pfsRender));
 	
 	println("End visualization...");
@@ -51,13 +48,6 @@ public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 FProperty popup(str s){
  return mouseOver(box(text(s), size(50), fillColor("lightyellow"),
  grow(1.2),resizable(false)));
-}
-
-//Figure circles(list[MethodStat] ProjectStat_sorted_loc){
-Figure circles(ProjectFilesStats ProjectStat_sorted_loc){
-	ProjectFilesStat mFirst = head(ProjectStat_sorted_loc);
-	
- return box(overlay([ellipse(width(toReal(s.complexity)/2), height(toReal(s.complexity)/2), align(toReal(s.size)/mFirst.size,1-toReal(s.complexity)/545), fillColor(color("blue", 0.6)),resizable(false),popup("Object: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>")) | s <- ProjectStat_sorted_loc]),size(toReal(mFirst.size)*2,toReal(545)*2)) ;
 }
 
 Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
@@ -91,8 +81,8 @@ Figure scaledCircles(ProjectFilesStats pf){
                                     int () { return maxComplexity; },  
                                     int () { return complexityFilter; },    
                                     void (int s) { complexityFilter = s; }, 
-                                    width(500)),
-                                    complexityfield()
+                                    width(500))//,
+                                    //complexityfield()
                        
                       ], left(),  top(), resizable(false)),  
                       hcat([grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [maxMethodCount..0], remainder(toRat(g,20)) == 0], vgap(30)),
@@ -160,10 +150,10 @@ private bool lowRisk = false;
 public Figure check(){
   bool state = false;
   return vcat([ text("Filter risk level:"),
-  				checkbox("4 - Very High Risk", void(bool s4){ state = s4; if(s4) {veryHighRisk = true; } else {veryHighRisk = false;}}),
-  				checkbox("3 - High Risk", void(bool s3){ state = s3; if(s3) {highRisk = true; } else {highRisk = false;}}),
-  				checkbox("2 - Moderate Risk", void(bool s2){ state = s2; if(s2) {moderateRisk = true; } else {moderateRisk = false;}}),
-  				checkbox("1 - Low Risk", void(bool s1){ state = s1; if(s1) {lowRisk = true; } else {lowRisk = false;}})
+  				checkbox("4 - Very High Risk", void(bool s4){ state = s4; if(s4) {veryHighRisk = true; } else {veryHighRisk = false;}},fillColor("red")),
+  				checkbox("3 - High Risk", void(bool s3){ state = s3; if(s3) {highRisk = true; } else {highRisk = false;}},fillColor("orange")),
+  				checkbox("2 - Moderate Risk", void(bool s2){ state = s2; if(s2) {moderateRisk = true; } else {moderateRisk = false;}},fillColor("yellow")),
+  				checkbox("1 - Low Risk", void(bool s1){ state = s1; if(s1) {lowRisk = true; } else {lowRisk = false;}},fillColor("green"))
               ], width(100), resizable(false));
 }
 
