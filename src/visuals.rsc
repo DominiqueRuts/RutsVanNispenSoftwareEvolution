@@ -74,10 +74,14 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
+private real maxComplexityLog = 0.0;
+
 Figure scaledCircles(ProjectFilesStats pf){
 	ProjectFilesStat mFirst = head(pf);
 	int maxMethodCount = max(pf.methodCount);
 	int maxComplexity = max(pf.complexity);
+	maxComplexityLog = log(maxComplexity,2);
+
    //int n = 1;
    return vcat([ text("Complexity distribution per Java file"),
    			hcat ([text("Method count", textAngle(270)),
@@ -88,7 +92,7 @@ Figure scaledCircles(ProjectFilesStats pf){
                                     int () { return complexityFilter; },    
                                     void (int s) { complexityFilter = s; }, 
                                     width(500)),
-                                    computeFigure(Figure (){ return complexityfield();})
+                                    complexityfield()
                        
                       ], left(),  top(), resizable(false)),  
                       hcat([grid([[box(text("<g>"),height(30),resizable(false), bottom(),lineWidth(0))] | g <- [maxMethodCount..0], remainder(toRat(g,20)) == 0], vgap(30)),
@@ -106,8 +110,10 @@ Figure scaledCircles(ProjectFilesStats pf){
 }
 
 
+
+
 Figure createEllipse(ProjectFilesStat mFirst, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
-	return ellipse(size(log(s.complexity*2,2)/log(maxComplexity,2)*40), align(log(s.size,2)/log(mFirst.size, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),resizable(false),popup(ellipsePopupText(s)));
+	return ellipse(size(log(s.complexity*2,2)/maxComplexityLog*40), align(log(s.size,2)/log(mFirst.size, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),resizable(false),popup(ellipsePopupText(s)));
 }
 
 public int getDefaultRisk() {
@@ -141,7 +147,7 @@ public int getLowRisk() {
 public Color getRiskColor(int risk) {
 	if (risk == 4)  return color("red",0.6); 
 	if (risk == 3)  return color("orange",0.6);
-	if (risk == 2)  return color("blue",0.6);
+	if (risk == 2)  return color("yellow",0.6);
 	if (risk == 1) return color("green",0.6);
 	return color("grey");
 }
