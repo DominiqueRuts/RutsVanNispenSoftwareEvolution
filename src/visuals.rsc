@@ -21,14 +21,19 @@ import Set;
 import IO;
 
 // main function to build up and display the high level project information
-public void displayDashboard(ProjectSummary psum) {
-	str pname = psum.projectname + "-dashboard";
+public void displayDashboard(ProjectSummary psum, list[MethodStat] ProjectStat_sorted_loc) {
+	
+	// get project file statistics
+	ProjectFilesStats pfs = getProjectFileStats(ProjectStat_sorted_loc);
+	list[MethodStat] pms = ProjectStat_sorted_loc;
+	
+	str pname = psum.projectname + " - dashboard";
 	Figure top      = getTop(psum);
 	Figure middle_t = getMiddleTop(); 
 	Figure middle_b = getMiddleBottom(psum);
 	Figure bottom_t = getBottomTop();
 	Figure bottom   = getBottom(psum);
-	Figure bottom_b = getBottomBottom();
+	Figure bottom_b = getBottomBottom(psum, pfs, pms);
 	
 	render(pname, vcat([top, middle_t, middle_b, bottom_t, bottom, bottom_b]));
 }
@@ -120,11 +125,11 @@ public ScaleTable getScaling(RiskProfile rp, real offset) {
 	return <s_low, s_mod, s_hig, s_vhi, a_low, a_mod, a_hig, a_vhi>;
 }
 
-public Figure getBottomBottom() {	
+public Figure getBottomBottom(ProjectSummary psum, ProjectFilesStats pfs, list[MethodStat] pms) {	
 	int a = 150, b = 30, n = 0;
 	 
-	Figure b1 = button("View Size", void(){n += 1;}, halign(0.075), size(a, b), resizable(false, false));
-	Figure b2 = button("View Complexity", void(){n += 1;}, halign(0.05), size(a, b), resizable(false, false));
+	Figure b1 = button("Unit Size Treemap", void(){displayUnitSize(psum, pms);}, halign(0.075), size(a, b), resizable(false, false));
+	Figure b2 = button("File Size Treemap", void(){displayFileSize(psum, pfs);}, halign(0.05), size(a, b), resizable(false, false));
 	Figure b3 = button("View Filetree", void(){n += 1;}, halign(0.03), size(a, b), resizable(false, false));
 	
 	//return box(hcat([b1, b2, b3]), vshrink(0.1), fillColor("white"));
@@ -163,24 +168,100 @@ public Figure getRating(int rating) {
 	return box(hcat(l), center());
 }
 
-public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
-	println("Start visualization...");
-	cscale = colorScale(ProjectStat_sorted_loc.complexity, color("green", 0.5), color("red", 0.8));
-	//list[loc] names = ProjectStat_sorted_loc.name;	
-	t = treemap([
-	     box(area(s.size),fillColor(cscale(s.complexity)),popup("Object: <s.name> \nSize: <s.size> \nComplexity: <s.complexity>")
+// returns color for risk category of unit size or unit complexity
+public str getColor(int risk) {
+	str rcol = "white";
 
-//onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) { 
-//                                                 println("<ProjectStat_sorted_loc[i].name> - Size: <s.size> - Complexity: <s.complexity>"); 
-//                                                 return true;
-//                                             } )
-                         )  | s <- ProjectStat_sorted_loc, s.complexity > 2 //, i <- [0..size(ProjectStat_sorted_loc)]
-     ] );
-	render(t);
-	println("End visualization...");
+	if (risk <= 1) rcol = "Green";
+	if (risk == 2) rcol = "Yellow";
+	if (risk == 3) rcol = "Orange";
+	if (risk >= 4) rcol = "Red";
+	
+	return rcol;
+}
+
+public Figure getHeaderView(ProjectSummary psum, str a, str b) {	
+	Figure b1  = box( text(a, fontSize(20), fontBold(true)), std(halign(0.075)) );
+	Figure b2 = box( text(b, fontSize(15), left()) );
+
+	return box(hcat([b1, b2]), vshrink(0.1), fillColor("white"), std(lineColor("white")));
+}
+
+public void displayUnitSize(ProjectSummary psum, list[MethodStat] ProjectStat_sorted_loc) {
+	str pname = psum.projectname + " - unit size treemap";
+	list[MethodStat] pms = ProjectStat_sorted_loc;	
+	t = treemap([ box(area(s.size), fillColor(getColor(s.risk_cc)), popup("Object: <s.name>\nSize: <s.size>\nComplexity: <s.complexity>")
+                 ) | s <- pms, s.size > 10
+                ], vshrink(0.9), hshrink(0.975));
+                
+	render(pname, vcat([getHeaderView(psum, "Unit Size Treemap", "box area = unit size, box color = unit complexity"), t]));
+}
+
+public void displayFileSize(ProjectSummary psum, ProjectFilesStats pfs) {
+	str pname = psum.projectname + " - file size treemap";
+	cscale = colorScale(pfs.complexity, color("green"), color("darkred"));
+    t = treemap([ box(area(s.size), fillColor(cscale(s.complexity)), popup("Object: <s.file>\nComplexity: <s.complexity>\nSize: <s.size>")
+                  ) | s <- pfs, s.size > 10
+                ], vshrink(0.9), hshrink(0.975));
+                
+	render(pname, vcat([getHeaderView(psum, "File Size Treemap", "box area = file size, box color = file complexity"), t]));
 }
 
 FProperty popup(str S){
  return mouseOver(box(text(S), size(50), fillColor("lightyellow"),
  grow(1.2),resizable(false)));
+}
+
+alias ProjectFilesStats = list[tuple[str file, int size, int complexity, int methodCount, int riskcc, int maxriskcc]];
+alias ProjectFilesStat = tuple[str file, int size, int complexity, int methodCount, int riskcc, int maxriskcc];
+alias ProjectFilesSize = map[str file, int size];
+alias ProjectFilesMethods = map[str file, int methods];
+alias ProjectFilesRiskCC = map[str file, int riskCC];
+alias ProjectFilesMaxRiskCC = map[str file, int maxriskcc];
+alias ProjectFilesComplexity = map[str file, int complexity];
+
+private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
+	ProjectFilesStats pfs = [];
+	ProjectFilesSize pfsize = ();
+	ProjectFilesMethods pfmethods = ();
+	ProjectFilesRiskCC pfriskcc = ();
+	ProjectFilesMaxRiskCC pfmaxriskcc = ();
+	ProjectFilesComplexity pfcomplexity = ();
+	
+	for (s <- ProjectStat_sorted_loc) {
+		if(getFileName(s.name) in pfsize) {			
+			pfsize[getFileName(s.name)] = pfsize[getFileName(s.name)] + s.size;
+			pfmethods[getFileName(s.name)] += 1;
+			pfriskcc[getFileName(s.name)] += s.risk_cc;			
+			pfmaxriskcc[getFileName(s.name)] =  pfmaxriskcc[getFileName(s.name)] > s.risk_cc ? pfmaxriskcc[getFileName(s.name)] : s.risk_cc;
+			pfcomplexity[getFileName(s.name)] = pfcomplexity[getFileName(s.name)] + s.complexity;
+		} else {
+			pfsize[getFileName(s.name)] = s.size;
+			pfmethods[getFileName(s.name)] = 1;
+			pfriskcc[getFileName(s.name)] = s.risk_cc;
+			pfmaxriskcc[getFileName(s.name)] = s.risk_cc;
+			pfcomplexity[getFileName(s.name)] = s.complexity;
+		}
+	}
+	
+	for (pf <- pfsize) {
+		pfs += <pf, pfsize[pf], pfcomplexity[pf], pfmethods[pf], pfriskcc[pf], pfmaxriskcc[pf]>;
+	}
+	
+	pfs = sort(pfs, increasing2);
+	
+ return pfs;
+}
+
+public bool increasing2(tuple[str name, int size, int complexity, int methodCount, int riskcc, int maxriskcc] x, tuple[str name, int size, int complexity, int methodCount, int riskcc, int maxriskcc] y ) {
+	return x.size > y.size;
+}
+
+private str getFileName(loc s) {
+	str inputString = s.path;
+	int lastSlash = findLast(inputString, "/");
+	str sToDisplay = substring(inputString, 0, lastSlash);
+	sToDisplay = substring(sToDisplay, findLast(sToDisplay, "/")+1);
+	
+	return sToDisplay;
 }

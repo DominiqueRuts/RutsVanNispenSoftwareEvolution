@@ -93,7 +93,7 @@ public void main(str projectName, bool executeCalculation) {
 	// list sorted on method size
 	list[MethodStat] ProjectStat_sorted_loc = sort(ProjectStat, increasing);
 	
-	//int max = 50;
+	//int max = 20;
 	//println("Listing top <max> units (unit size): ");
 	//for (i <- [0..max]) {
 	//	println("method name       : <ProjectStat_sorted_loc[i].name>");
@@ -158,6 +158,6 @@ public void main(str projectName, bool executeCalculation) {
 		println("Reading project info from disc...");
 		ProjectSummary ps = readTextValueFile(#ProjectSummary, |project://<locationPath><projectName>-projectsummary.txt/|);
 		// render dashboard  
-		displayDashboard(ps);
+		displayDashboard(ps, ProjectStat_sorted_loc);
 	}
 }
