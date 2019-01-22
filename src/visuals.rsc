@@ -86,7 +86,7 @@ Figure scaledCircles(ProjectFilesStats pf){
                       ],gap(2)),
                       vcat([check() ,
                        checkColorBlind()
-                      ])                   
+                      ],resizable(false),top(),left(),gap(5))                   
                       ], top(),gap(2))                
                ],gap(2))
                ]),computeFigure(Figure (){ return fileDetails();}) 
@@ -168,7 +168,7 @@ private str lowRiskStyle = "solid";
 
 public Figure checkColorBlind(){
   bool colorblind = false;
-  return vcat([  				
+  return vcat([  text("Accessibility:",left(), width(150)),				
   				checkbox("Color blind?", void(bool s){ colorblind = s; if(s) {colorblindview = true;veryHighRiskStyle = "dashdot";highRiskStyle = "dash";moderateRiskStyle = "dot";lowRiskStyle = "solid"; } else {colorblindview = false;veryHighRiskStyle = "solid";highRiskStyle = "solid";moderateRiskStyle = "solid";lowRiskStyle = "solid";}},left(), width(150), resizable(false))
               ], width(150), resizable(false),top());
 }
