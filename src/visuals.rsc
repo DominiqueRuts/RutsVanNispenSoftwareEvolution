@@ -19,6 +19,7 @@ import Map;
 import Set;
 
 import util::Math;
+import util::Resources;
 import IO;
 
 // defined types to hold visualization data
@@ -54,6 +55,7 @@ public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 	
 
 	//render(scaledbox(max(pfsRender.complexity), pfsRender));
+	//render("ICicle view", scaledICicle(pfsRender));
 	render("Complexity view", scaledCircles(pfsRender));
 	
 	println("End visualization...");
@@ -83,6 +85,68 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                       ], left(),  top(), resizable(false)),  
                  computeFigure(Figure (){ return treemap([box(area(s.size),fillColor(cscale(s.complexity)),popup("File: <s.file> \nSize: <s.size> \nComplexity: <s.complexity>"))  | s <- pf, s.complexity > n-1] ); })
                ]);
+}
+
+alias ProjectClassICicleStats = list[tuple[str name, str parent, str path, int depth]];
+alias ICicleLevels = list[tuple[int depth, ProjectClassICicleStats ICStat]];
+
+private ProjectClassICicleStats calculateParent() {
+	return ;
+}
+
+Figure scaledICicle(ProjectFilesStats pf){
+	int maxFileSize = max(pf.size);
+	int maxMethodCount = max(pf.methodCount);
+	int maxComplexity = max(pf.complexity);
+	maxComplexityLog = log(maxComplexity,2);
+	
+	ProjectClassICicleStats ics = [<i.file, substring(i.path, 0, findLast(i.path,"/<i.file>")), i.path, size(findAll(i.path,"/"))-1> | i <- pf];
+	for (e <- ics) {
+			println("<e.depth>: <e.parent> - <e.name> - <e.path>");
+		}
+	ICicleLevels icl = [];
+	
+	for (d <- [max(ics.depth)..1]) {
+		ProjectFilesICicleStats icstmp = [];
+		for (ic <- ics, ic.depth == d) {
+			icstmp += <substring(ic.parent, findLast(ic.parent,"/") > -1 ? findLast(ic.parent,"/")+1 : 0),substring(ic.parent, 0, findLast(ic.parent,"/") > -1 ? findLast(ic.parent,"/"): 0),d>; 
+			//println("<ic.name>: <ic.depth> - <ic.parent>");
+		}
+		icl += <d, icstmp>;
+	}
+	
+	for (d <- icl) {
+	println("<d.depth>: ");
+		for (e <- d.ICStat) {
+			println("<e.depth>: <e.parent> - <e.name>");
+		}
+	}
+	
+
+   return vcat([
+			text("Complexity distribution", fontSize(20), fontBold(true)),
+   			hcat ([
+   				text("Method count", textAngle(270)),   				
+   				vcat([
+   					hcat([
+   						text(str () { return "Minimum total complexity: <complexityFilter>";}),
+   				 		createComplexitySlider(maxComplexity)//,
+						//complexityfield()                       
+					], left(),  top(), resizable(false)),  
+					hcat([
+						grid(
+							[
+								[createYAxis(maxMethodCount), createBubbleChart(maxFileSize, maxMethodCount, maxComplexity, pf)],
+								[box(width(20),resizable(false), left()), createXAxis(maxFileSize)]						
+						],resizable(true), left(), gap(2)),
+						vcat([
+							check(),
+							checkColorBlind()
+						],resizable(false),top(),left(),gap(5))                   
+					], top(),gap(2))                
+				],gap(2))
+			]),text("Size (Lines of Code)"),computeFigure(Figure (){ return fileDetails();}) 
+		],gap(20));
 }
 
 
@@ -285,8 +349,10 @@ private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorte
 
 private str getFileName(loc s) {
 	str inputString = s.path;
-	int lastSlash = findLast(inputString, "/");
-	str sToDisplay = substring(inputString, 0, lastSlash);
+	int tmp = findFirst(inputString, "(");
+	str sToDisplay = tmp > -1 ? substring(inputString, 0, tmp) : inputString;
+	int lastSlash = findLast(sToDisplay, "/");
+	sToDisplay = substring(sToDisplay, 0, lastSlash);
 	sToDisplay = substring(sToDisplay, findLast(sToDisplay, "/")+1);
 	
 	return sToDisplay;
@@ -294,16 +360,9 @@ private str getFileName(loc s) {
 
 private str getPath(loc s) {
 	str inputString = s.path;
-	int lastSlash = findLast(inputString, "/");
-	str sToDisplay = substring(inputString, 0, lastSlash+1);	
-	return sToDisplay;
-}
-
-private str clearString(loc s) {
-	str inputString = s.path;
-	int lastSlash = findLast(inputString, "/");
-	str sToDisplay = substring(inputString, lastSlash+1);
-	sToDisplay = substring(sToDisplay, 0, findFirst(sToDisplay, "("));
-	
+	int tmp = findFirst(inputString, "(");
+	str sToDisplay = tmp > -1 ? substring(inputString, 0, tmp) : inputString;
+	int lastSlash = findLast(sToDisplay, "/");
+	sToDisplay = substring(sToDisplay, 0, lastSlash+1);	
 	return sToDisplay;
 }
