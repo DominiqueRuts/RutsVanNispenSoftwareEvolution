@@ -204,8 +204,8 @@ public Figure getHeaderView(ProjectSummary psum, str a, str b) {
 public void displayUnitSize(ProjectSummary psum, list[MethodStat] ProjectStat_sorted_loc) {
 	str pname = psum.projectname + " - unit size treemap";
 	list[MethodStat] pms = ProjectStat_sorted_loc;	
-	t = treemap([ box(area(s.size), fillColor(getColor(s.risk_cc)), popup("Object: <s.name>\nSize: <s.size>\nComplexity: <s.complexity>")
-                 , execOnMouseDown("name: <s.name>, complexity: <s.complexity>, size: <s.size>") ) | s <- pms, s.size > 10
+	t = treemap([ box(area(s.size), fillColor(getColor(s.risk_cc)), popup("Method: <s.name>\nSize: <s.size>\nComplexity: <s.complexity>")
+                 , execOnMouseDown("name: <s.name>, complexity: <s.complexity>, size: <s.size>") ) | s <- pms, s.size > 15
                 ], vshrink(0.9), hshrink(0.975));
                 
 	render(pname, vcat([getHeaderView(psum, "Unit Size Treemap", "box area = unit size, box color = unit complexity"), t]));
@@ -214,8 +214,8 @@ public void displayUnitSize(ProjectSummary psum, list[MethodStat] ProjectStat_so
 public void displayFileSize(ProjectSummary psum, ProjectFilesStats pfs) {
 	str pname = psum.projectname + " - file size treemap";
 	cscale = colorScale(pfs.complexity, color("green"), color("darkred"));
-    t = treemap([ box(area(s.size), fillColor(cscale(s.complexity)), popup("Object: <s.file>\nComplexity: <s.complexity>\nSize: <s.size>")
-                , execOnMouseDown("name: <s.file>, complexity: <s.complexity>, size: <s.size>") ) | s <- pfs, s.size > 10
+    t = treemap([ box(area(s.size), fillColor(cscale(s.complexity)), popup("Filename: <s.file>\nSize: <s.size>\nComplexity: <s.complexity>")
+                , execOnMouseDown("name: <s.file>, complexity: <s.complexity>, size: <s.size>") ) | s <- pfs, s.size > 15
                 ], vshrink(0.9), hshrink(0.975));
                 
 	render(pname, vcat([getHeaderView(psum, "File Size Treemap", "box area = file size, box color = file complexity"), t]));
