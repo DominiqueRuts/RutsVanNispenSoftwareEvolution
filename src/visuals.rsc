@@ -47,10 +47,11 @@ private str moderateRiskStyle = "solid";
 private str lowRiskStyle = "solid";
 // private variable to hold the clicked bubble details
 private ProjectFilesStat clickedFileStat = <"", "", 0, 0, 0, 0, 0>;
+private ProjectFilesStats pfsRender = [];
 
 public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 	println("Start visualization...");
-	ProjectFilesStats pfsRender = getProjectFileStats(ProjectStat_sorted_loc);
+	pfsRender = getProjectFileStats(ProjectStat_sorted_loc);
 	cscale = colorScale(pfsRender.complexity, color("green", 0.5), color("red", 0.8));
 	
 
@@ -87,7 +88,7 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
-data LevelMap = LevelMap(str name, list[LevelMap] children);
+data LevelMap = LevelMap(str name, list[LevelMap] children, int maxriskcc);
 
 Figure scaledICicle(ProjectFilesStats pf){
 	str toplevel = split("/",pf[0].path)[1];
@@ -102,19 +103,21 @@ Figure scaledICicle(ProjectFilesStats pf){
 }
 
 Figure LevelMapGrid(LevelMap lm) {
-	return grid([[box(text(lm[0]),top())],[LevelMapItem(lm[1])]],top());
+	return grid([[box(text(lm.name),top())],[LevelMapItem(lm.children)]],top());
 }
 
 Figure LevelMapItem(list[LevelMap] li) {
 	list[value] lg = [];
 	real colorT = 0.0;
 	for (i <- li) {
-		if (i[1] == []) {
-			lg+= grid([[box(width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0))]] );
+		if (i.children == []) {
+			str filteredName = substring(getFileName("<i.name>/"),0,findLast(getFileName("<i.name>/"),"."));
+			int mrc = (size(domainR(pfmaxriskcc,{filteredName})) > 0 ? pfmaxriskcc[filteredName]: 1);
+			lg+= grid([[box(width(5),top(),fillColor(getRiskColor(mrc)), size(10),top(),align(0))]] );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
 				colorT += 0.1;
-				lg+= grid([[box(text(i[0], textAngle(90),width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0),resizable(true))],[LevelMapItem(i[1])]],resizable(false) );
+				lg+= grid([[box(text(i.name, textAngle(90),width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
 			}
 		}
 	}
@@ -123,7 +126,7 @@ Figure LevelMapItem(list[LevelMap] li) {
 }
 
 private bool isEmptyLevelMap(list[LevelMap] l) {
-	if (isEmpty(l) || (isEmptyLevelMap(l[0][1])) && !endsWith("<l[0][0]>",".java")) {
+	if (isEmpty(l) || (isEmptyLevelMap(l[0].children)) && !endsWith("<l[0].name>",".java")) {
 		return true; 
 	} else {
 		return false;
@@ -142,11 +145,11 @@ private LevelMap readLoc(str name) {
 		if (isDirectory(toLocation("project://<filePath>"))) {
 			tmp += readLoc(filePath);			
 		} else if(isFile(toLocation("project://<filePath>")) && endsWith(filePath, ".java")) {
-			tmp += LevelMap(filePath, []);
+			tmp += LevelMap(filePath, [], 0);
 		}
 	}
 
-	return LevelMap(name, tmp);
+	return LevelMap(name, tmp, 0);
 }
 
 
@@ -308,7 +311,7 @@ private str ellipsePopupText(ProjectFilesStat s) {
 	return "Object: <s.file> \nLines of Code: <s.size> \nComplexity: <s.complexity> \nMethods: <s.methodCount>";
 }
 
-
+ProjectFilesMaxRiskCC pfmaxriskcc = ();
 
 private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
 	ProjectFilesStats pfs = [];
@@ -316,7 +319,7 @@ private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorte
 	ProjectFilesSize pfsize = ();
 	ProjectFilesMethods pfmethods = ();
 	ProjectFilesRiskCC pfriskcc = ();
-	ProjectFilesMaxRiskCC pfmaxriskcc = ();
+	pfmaxriskcc = ();
 	ProjectFilesComplexity pfcomplexity = ();
 	
 	for (s <- ProjectStat_sorted_loc) {
@@ -344,6 +347,10 @@ private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorte
 	
 	
  return pfs;
+}
+
+private str getFileName(str s) {
+	return getFileName(toLocation(s));
 }
 
 private str getFileName(loc s) {
