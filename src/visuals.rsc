@@ -117,7 +117,7 @@ Figure LevelMapItem(list[LevelMap] li) {
 	real colorT = 0.0;
 	for (i <- li) {
 		if (i.children == []) {
-			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false))]] );
+			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false))] | i.maxriskcc == getVeryHighRisk() || i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0] );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
 				colorT += 0.1;
@@ -141,7 +141,6 @@ private int maxSize = 0;
 
 private LevelMap readLoc(str name) {
 	loc lc = toLocation("project://<name>");
-	println(lc);
 	list[str] files = listEntries(lc);
 	
 	list[LevelMap] tmp = [];	
