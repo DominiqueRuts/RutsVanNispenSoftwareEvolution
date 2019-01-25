@@ -114,14 +114,12 @@ Figure LevelMapGrid(LevelMap lm) {
 
 Figure LevelMapItem(list[LevelMap] li) {
 	list[value] lg = [];
-	real colorT = 0.0;
 	for (i <- li) {
 		if (i.children == []) {
-			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false),popup("Object: <i.name>\nSize: <i.size> lines of code\nMax Risk: <i.maxriskcc>"))] | i.maxriskcc == getVeryHighRisk() || i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0] );
+			lg+= grid([[box(width(sqrt(i.size)),height(150),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false),popup("Object: <i.name>\nSize: <i.size> lines of code\nMax Risk: <i.maxriskcc>"))] | i.maxriskcc == getVeryHighRisk() || i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0],top() );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
-				colorT += 0.1;
-				lg+= grid([[box(text(substring(i.name,findLast(i.name,"/")+1),width(5),top(),textAngle(90)),width(5),top(),fillColor(color("blue",colorT)), size(10),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
+				lg+= grid([[box(text(substring(i.name,findLast(i.name,"/")+1),width(5),top(),textAngle(90)),width(5),top(),height(150),fillColor(color("blue",0.3)), size(10),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false),top() );
 			}
 		}
 	}
