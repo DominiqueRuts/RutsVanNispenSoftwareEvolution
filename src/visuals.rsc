@@ -141,11 +141,15 @@ public ScaleTable getScaling(RiskProfile rp, real offset) {
 }
 
 public Figure getBottomBottom(ProjectSummary psum, ProjectFilesStats pfs, list[MethodStat] pms) {	
-	int a = 200, b = 30, n = 0;
+	int a = 200, b = 30, c = 125, n = 0;
 	 
-	Figure b1 = button("Unit Size Treemap", void(){displayUnitSize(psum, pms);}, halign(0.075), size(a, b), resizable(false, false));
-	Figure b2 = button("File Size Treemap", void(){displayFileSize(psum, pfs);}, halign(0.05), size(a, b), resizable(false, false));
-	Figure b3 = button("Complexity Distribution", void(){displayCCDist(psum, pfs);}, halign(0.03), size(a, b), resizable(false, false));
+	Figure b1 = box(button("Unit Size Treemap", void(){displayUnitSize(psum, pms);}, halign(0.075), size(a, b), resizable(false, false)));
+	Figure b2 = box(button("File Size Treemap", void(){displayFileSize(psum, pfs);}, halign(0.05), size(a, b), resizable(false, false)));
+	
+	Figure b3a = button("Complexity", void(){displayCCDist(psum, pfs);}, halign(0.1), size(c, b), resizable(false, false));
+	Figure b3b = button("Partitioning", void(){displayIcicleTree(psum, pfs);}, halign(0.4), size(c, b), resizable(false, false));
+	
+	Figure b3 = box(hcat([b3a, b3b]));
 	
 	return box(hcat([b1, b2, b3]), vshrink(0.1), fillColor("white"), std(lineColor("white")));
 }
@@ -235,6 +239,20 @@ public void displayCCDist(ProjectSummary psum, ProjectFilesStats pfs) {
 	render(pname, vcat([getHeaderViewDist(pfs), scaledCircles(pfs), box(vshrink(0.01), fillColor("white"), std(lineColor("white")))]));
 }
 
+public void displayIcicleTree(ProjectSummary psum, ProjectFilesStats pfs) {
+	str pname = psum.projectname + " - source code partitioning chart";
+	render(pname, vcat([getHeaderViewIcicle(pfs), scaledIcicle(pfs, psum.projectname)]));
+}
+
+public Figure getHeaderViewIcicle(ProjectFilesStats pfs) {
+	int maxComplexity = max(pfs.complexity);
+	Figure b1 = box( text("Source Code Partitioning Chart", fontSize(20), fontBold(true)), std(halign(0.045)) );
+	Figure b2 = checkColorBlind();
+	Figure b3 = check();
+	
+	return box(hcat([b1, b2, b3]), vshrink(0.1), fillColor("white"), std(lineColor("white")));
+}
+
 public Figure getHeaderViewDist(ProjectFilesStats pfs) {
 	int maxComplexity = max(pfs.complexity);
 	Figure b1 = box( text("File Complexity Distribution", fontSize(20), fontBold(true)), std(halign(0.15)) );
@@ -271,6 +289,71 @@ Figure scaledCircles(ProjectFilesStats pf){
 		], gap(5));
 }
 
+data LevelMap = LevelMap(str name, list[LevelMap] children, int maxriskcc, int size);
+
+Figure scaledIcicle(ProjectFilesStats pf, str project){
+	LevelMap lmp2 = readLoc("<project>/src");
+	
+	return computeFigure(Figure (){ return LevelMapGrid(lmp2);});	
+}
+
+Figure LevelMapGrid(LevelMap lm) {
+	return grid([[box(text(lm.name), std(lineColor("white")), height(30))], [LevelMapItem(lm.children)]], top(), resizable(false));
+}
+
+Figure LevelMapItem(list[LevelMap] li) {
+	list[value] lg = [];
+	for (i <- li) {
+		if (i.children == []) {
+			lg += grid([[box(width(sqrt(i.size)), height(150), lineColor(colorblindview ? "black":"white"),
+			  fillColor(getRiskColor(i.maxriskcc)), align(0), resizable(false),
+				popup("File: <i.name>\nSize: <i.size>\nRisk level (max.): <i.maxriskcc>"))] | i.maxriskcc == getVeryHighRisk() ||
+				 i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0], 
+				  top());
+		} else {
+			if (!isEmptyLevelMap(i[1])) {
+				lg += grid([[box(text(substring(i.name,findLast(i.name,"/")+1), width(5), textAngle(90), fontSize(8)), width(5), 
+				      height(150), fillColor(color("blue", 0.3)), std(lineColor("white")), size(10), align(0), resizable(true))], 
+				       [LevelMapItem(i.children)]], resizable(false), top());
+			}
+		}
+	}
+	
+	return grid([lg]);
+}
+
+private bool isEmptyLevelMap(list[LevelMap] l) {
+	if (isEmpty(l) || (isEmptyLevelMap(l[0].children)) && !endsWith("<l[0].name>",".java")) {
+		return true; 
+	} else {
+		return false;
+	}
+}
+
+private int maxSize = 0;
+
+private LevelMap readLoc(str name) {
+	loc lc = toLocation("project://<name>");
+	list[str] files = listEntries(lc);
+	
+	list[LevelMap] tmp = [];	
+	
+	for(f <- files) {
+		str filePath = "<name>/<f>";
+		if (isDirectory(toLocation("project://<filePath>"))) {
+			tmp += readLoc(filePath);			
+		} else if(isFile(toLocation("project://<filePath>")) && endsWith(filePath, ".java")) {
+			str filteredName = substring(getFileName("<filePath>/"),0,findLast(getFileName("<filePath>/"),"."));
+			int mrc = (size(domainR(pfmaxriskcc, {filteredName})) > 0 ? pfmaxriskcc[filteredName]: 1);			
+			int size = (size(domainR(pfsize, {filteredName})) > 0 ? pfsize[filteredName]: 1);
+			maxSize = size > maxSize ? size : maxSize;
+			tmp += LevelMap(filePath, [], mrc, size);
+		}
+	}
+
+	return LevelMap(name, tmp, 0, 0);
+}
+
 Figure createComplexitySlider(int max) {
 	return scaleSlider(int() { return 1; },     
                                     int () { return max; },  
@@ -293,7 +376,9 @@ Figure createBubbleChart(int maxFileSize, int maxMethodCount, int maxComplexity,
 }
 
 Figure createEllipse(int maxFileSize, int maxMethodCount, int maxComplexity, ProjectFilesStat s) {
-	return ellipse(size(sqrt(s.complexity)*3), align(log(s.size,2)/log(maxFileSize, 2),1-toReal(s.methodCount)/maxMethodCount),  fillColor(getRiskColor(s.maxriskcc)),lineStyle(getRiskLineStyle(s.maxriskcc)),lineWidth(getRiskLineWidth(s.maxriskcc)),resizable(false),ellipseMouseDown(s));
+	return ellipse(size(sqrt(s.complexity)*3), align(log(s.size,2)/log(maxFileSize, 2),1-toReal(s.methodCount)/maxMethodCount), 
+	  fillColor(getRiskColor(s.maxriskcc)), lineStyle(getRiskLineStyle(s.maxriskcc)), lineWidth(getRiskLineWidth(s.maxriskcc)), 
+	    resizable(false), ellipseMouseDown(s));
 }
 
 public int getDefaultRisk() {
@@ -336,7 +421,7 @@ public Color getRiskColor(int risk) {
 		if (risk == 4) col = "black"; 
 		if (risk == 3) col = "dimgray";
 		if (risk == 2) col = "lightgray";
-		if (risk == 1) col = "white";
+		if (risk == 1) col = "whitesmoke";
 	}
 	
 	return color(col, 0.6);
@@ -344,7 +429,8 @@ public Color getRiskColor(int risk) {
 
 public Figure check(){
   bool state = false;
-  return vcat([ text("Risk Level Filter", fontSize(12), halign(0.4)),
+  //return vcat([ text("Risk Level Filter", fontSize(12), halign(0.4)),
+  return vcat([ text("Risk Level Filter", fontSize(12), halign(0.1)),
   				checkbox("4 - Very High", void(bool s4){ state = s4; if(s4) {veryHighRisk = true; } else {veryHighRisk = false;}}, fillColor("red"), left(), width(150), resizable(false)),
   				checkbox("3 - High", void(bool s3){ state = s3; if(s3) {highRisk = true; } else {highRisk = false;}}, fillColor("orange"), left(), width(150), resizable(false)),
   				checkbox("2 - Moderate", void(bool s2){ state = s2; if(s2) {moderateRisk = true; } else {moderateRisk = false;}}, fillColor("yellow"), left(), width(150), resizable(false)),
@@ -389,7 +475,7 @@ public Figure fileDetails(){
 }
 
 public Figure complexityfield(){
-  return vcat([ box(textfield("<complexityFilter>", void(str s){ complexityFilter = toInt(s);}, fillColor("yellow")), fillColor("yellow"),width(50), resizable(false))
+  return vcat([ box(textfield("<complexityFilter>", void(str s){ complexityFilter = toInt(s);}, fillColor("yellow")), fillColor("yellow"), width(50), resizable(false))
               ]);
 }  
 
@@ -412,13 +498,16 @@ return onMouseDown(bool (int butnr, map[KeyModifier,bool] modifiers) {
   });
 }
 
+ProjectFilesSize pfsize = ();
+ProjectFilesMaxRiskCC pfmaxriskcc = ();
+
 private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
 	ProjectFilesStats pfs = [];
 	ProjectFilesPath pfpath = ();
-	ProjectFilesSize pfsize = ();
+	pfsize = ();
 	ProjectFilesMethods pfmethods = ();
 	ProjectFilesRiskCC pfriskcc = ();
-	ProjectFilesMaxRiskCC pfmaxriskcc = ();
+	pfmaxriskcc = ();
 	ProjectFilesComplexity pfcomplexity = ();
 	
 	for (s <- ProjectStat_sorted_loc) {
@@ -435,15 +524,12 @@ private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorte
 			pfriskcc[getFileName(s.name)] = s.risk_cc;
 			pfmaxriskcc[getFileName(s.name)] = s.risk_cc;
 			pfcomplexity[getFileName(s.name)] = s.complexity;
-		}
-		
-		
+		}		
 	}
 	
 	for (pf <- pfsize) {
 		pfs += <pf, pfpath[pf], pfsize[pf], pfcomplexity[pf], pfmethods[pf], pfriskcc[pf], pfmaxriskcc[pf]>;
 	}
-	
 	
  return pfs;
 }
@@ -452,10 +538,16 @@ public bool increasing2(tuple[str name, int size, int complexity, int methodCoun
 	return x.size > y.size;
 }
 
+private str getFileName(str s) {
+	return getFileName(toLocation(s));
+}
+
 private str getFileName(loc s) {
 	str inputString = s.path;
-	int lastSlash = findLast(inputString, "/");
-	str sToDisplay = substring(inputString, 0, lastSlash);
+	int tmp = findFirst(inputString, "(");
+	str sToDisplay = tmp > -1 ? substring(inputString, 0, tmp) : inputString;
+	int lastSlash = findLast(sToDisplay, "/");
+	sToDisplay = substring(sToDisplay, 0, lastSlash);
 	sToDisplay = substring(sToDisplay, findLast(sToDisplay, "/")+1);
 	
 	return sToDisplay;
@@ -463,8 +555,10 @@ private str getFileName(loc s) {
 
 private str getPath(loc s) {
 	str inputString = s.path;
-	int lastSlash = findLast(inputString, "/");
-	str sToDisplay = substring(inputString, 0, lastSlash+1);	
+	int tmp = findFirst(inputString, "(");
+	str sToDisplay = tmp > -1 ? substring(inputString, 0, tmp) : inputString;
+	int lastSlash = findLast(sToDisplay, "/");
+	sToDisplay = substring(sToDisplay, 0, lastSlash+1);	
 	return sToDisplay;
 }
 
