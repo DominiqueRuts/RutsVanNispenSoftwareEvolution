@@ -305,7 +305,7 @@ Figure LevelMapItem(list[LevelMap] li) {
 	list[value] lg = [];
 	for (i <- li) {
 		if (i.children == []) {
-			lg += grid([[box(width(sqrt(i.size)), height(150), lineColor(colorblindview ? "black":"white"),
+			lg += grid([[box(width(i.size/14), height(150), lineColor(colorblindview ? "black":"white"),
 			  fillColor(getRiskColor(i.maxriskcc)), align(0), resizable(false),
 				popup("File: <i.name>\nSize: <i.size>\nRisk level (max.): <i.maxriskcc>"))] | i.maxriskcc == getVeryHighRisk() ||
 				 i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0], 
