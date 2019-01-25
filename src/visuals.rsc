@@ -240,13 +240,13 @@ public void displayCCDist(ProjectSummary psum, ProjectFilesStats pfs) {
 }
 
 public void displayIcicleTree(ProjectSummary psum, ProjectFilesStats pfs) {
-	str pname = psum.projectname + " - source code partitioning chart";
+	str pname = psum.projectname + " - source code partitioning";
 	render(pname, vcat([getHeaderViewIcicle(pfs), scaledIcicle(pfs, psum.projectname)]));
 }
 
 public Figure getHeaderViewIcicle(ProjectFilesStats pfs) {
 	int maxComplexity = max(pfs.complexity);
-	Figure b1 = box( text("Source Code Partitioning Chart", fontSize(20), fontBold(true)), std(halign(0.045)) );
+	Figure b1 = box( text("Source Code Partitioning", fontSize(20), fontBold(true)), std(halign(0.045)) );
 	Figure b2 = checkColorBlind();
 	Figure b3 = check();
 	
