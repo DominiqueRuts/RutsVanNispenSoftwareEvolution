@@ -55,8 +55,8 @@ public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
 	
 
 	//render(scaledbox(max(pfsRender.complexity), pfsRender));
-	//render("ICicle view", scaledICicle(pfsRender));
-	render("Complexity view", scaledCircles(pfsRender));
+	render("ICicle view", scaledICicle(pfsRender));
+	//render("Complexity view", scaledCircles(pfsRender));
 	
 	println("End visualization...");
 }
@@ -87,68 +87,67 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
-alias ProjectClassICicleStats = list[tuple[str name, str parent, str path, int depth]];
-alias ICicleLevels = list[tuple[int depth, ProjectClassICicleStats ICStat]];
-
-private ProjectClassICicleStats calculateParent() {
-	return ;
-}
+data LevelMap = LevelMap(str name, list[LevelMap] children);
 
 Figure scaledICicle(ProjectFilesStats pf){
-	int maxFileSize = max(pf.size);
-	int maxMethodCount = max(pf.methodCount);
-	int maxComplexity = max(pf.complexity);
-	maxComplexityLog = log(maxComplexity,2);
+	str toplevel = split("/",pf[0].path)[1];
 	
-	ProjectClassICicleStats ics = [<i.file, substring(i.path, 0, findLast(i.path,"/<i.file>")), i.path, size(findAll(i.path,"/"))-1> | i <- pf];
-	for (e <- ics) {
-			println("<e.depth>: <e.parent> - <e.name> - <e.path>");
-		}
-	ICicleLevels icl = [];
+	LevelMap lmp2 = readLoc(toplevel);
 	
-	for (d <- [max(ics.depth)..1]) {
-		ProjectFilesICicleStats icstmp = [];
-		for (ic <- ics, ic.depth == d) {
-			icstmp += <substring(ic.parent, findLast(ic.parent,"/") > -1 ? findLast(ic.parent,"/")+1 : 0),substring(ic.parent, 0, findLast(ic.parent,"/") > -1 ? findLast(ic.parent,"/"): 0),d>; 
-			//println("<ic.name>: <ic.depth> - <ic.parent>");
-		}
-		icl += <d, icstmp>;
-	}
+	//println(lmp2);
 	
-	for (d <- icl) {
-	println("<d.depth>: ");
-		for (e <- d.ICStat) {
-			println("<e.depth>: <e.parent> - <e.name>");
-		}
-	}
 	
-
-   return vcat([
-			text("Complexity distribution", fontSize(20), fontBold(true)),
-   			hcat ([
-   				text("Method count", textAngle(270)),   				
-   				vcat([
-   					hcat([
-   						text(str () { return "Minimum total complexity: <complexityFilter>";}),
-   				 		createComplexitySlider(maxComplexity)//,
-						//complexityfield()                       
-					], left(),  top(), resizable(false)),  
-					hcat([
-						grid(
-							[
-								[createYAxis(maxMethodCount), createBubbleChart(maxFileSize, maxMethodCount, maxComplexity, pf)],
-								[box(width(20),resizable(false), left()), createXAxis(maxFileSize)]						
-						],resizable(true), left(), gap(2)),
-						vcat([
-							check(),
-							checkColorBlind()
-						],resizable(false),top(),left(),gap(5))                   
-					], top(),gap(2))                
-				],gap(2))
-			]),text("Size (Lines of Code)"),computeFigure(Figure (){ return fileDetails();}) 
-		],gap(20));
+	
+	return LevelMapGrid(lmp2);
 }
 
+Figure LevelMapGrid(LevelMap lm) {
+	return grid([[box(text(lm[0]),top())],[LevelMapItem(lm[1])]],top());
+}
+
+Figure LevelMapItem(list[LevelMap] li) {
+	list[value] lg = [];
+	real colorT = 0.0;
+	for (i <- li) {
+		if (i[1] == []) {
+			lg+= grid([[box(width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0))]] );
+		} else {
+			if (!isEmptyLevelMap(i[1])) {
+				colorT += 0.1;
+				lg+= grid([[box(text(i[0], textAngle(90),width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0),resizable(true))],[LevelMapItem(i[1])]],resizable(false) );
+			}
+		}
+	}
+	
+	return grid([lg]);
+}
+
+private bool isEmptyLevelMap(list[LevelMap] l) {
+	if (isEmpty(l) || (isEmptyLevelMap(l[0][1])) && !endsWith("<l[0][0]>",".java")) {
+		return true; 
+	} else {
+		return false;
+	}
+}
+
+private LevelMap readLoc(str name) {
+	loc lc = toLocation("project://<name>");
+	list[str] files = listEntries(lc);
+	
+	list[LevelMap] tmp = [];	
+	
+	for(f <- files) {
+		str filePath = "<name>/<f>";
+		//println("project://<filePath>");
+		if (isDirectory(toLocation("project://<filePath>"))) {
+			tmp += readLoc(filePath);			
+		} else if(isFile(toLocation("project://<filePath>")) && endsWith(filePath, ".java")) {
+			tmp += LevelMap(filePath, []);
+		}
+	}
+
+	return LevelMap(name, tmp);
+}
 
 
 Figure scaledCircles(ProjectFilesStats pf){
