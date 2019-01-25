@@ -49,14 +49,14 @@ private str lowRiskStyle = "solid";
 private ProjectFilesStat clickedFileStat = <"", "", 0, 0, 0, 0, 0>;
 private ProjectFilesStats pfsRender = [];
 
-public void visualize(list[MethodStat] ProjectStat_sorted_loc) {
+public void visualize(list[MethodStat] ProjectStat_sorted_loc, str project) {
 	println("Start visualization...");
 	pfsRender = getProjectFileStats(ProjectStat_sorted_loc);
 	cscale = colorScale(pfsRender.complexity, color("green", 0.5), color("red", 0.8));
 	
 
 	//render(scaledbox(max(pfsRender.complexity), pfsRender));
-	render("ICicle view", scaledICicle(pfsRender));
+	render("ICicle view", scaledICicle(pfsRender, project));
 	//render("Complexity view", scaledCircles(pfsRender));
 	
 	println("End visualization...");
@@ -90,16 +90,22 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
 
 data LevelMap = LevelMap(str name, list[LevelMap] children, int maxriskcc, int size);
 
-Figure scaledICicle(ProjectFilesStats pf){
+Figure scaledICicle(ProjectFilesStats pf, str project){
 	str toplevel = split("/",pf[0].path)[1];
 	
-	LevelMap lmp2 = readLoc(toplevel);
+	LevelMap lmp2 = readLoc("<project>/src");
 	
-	//println(lmp2);
-	
-	
-	
-	return LevelMapGrid(lmp2);
+	return vcat([
+			text("Architectural view", fontSize(20), fontBold(true)),
+					hcat([
+						computeFigure(Figure (){ return LevelMapGrid(lmp2);}),
+						vcat([
+							check(),
+							checkColorBlind()
+						],resizable(false),top(),left(),gap(5))                   
+					], top(),gap(2))     
+		],gap(20));		
+
 }
 
 Figure LevelMapGrid(LevelMap lm) {
@@ -111,12 +117,11 @@ Figure LevelMapItem(list[LevelMap] li) {
 	real colorT = 0.0;
 	for (i <- li) {
 		if (i.children == []) {
-			println(i.size);
 			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false))]] );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
 				colorT += 0.1;
-				lg+= grid([[box(text(i.name,width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
+				lg+= grid([[box(text(substring(i.name,findLast(i.name,"/")+1),width(5),top(),textAngle(90)),width(5),top(),fillColor(color("blue",colorT)), size(10),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
 			}
 		}
 	}
@@ -136,6 +141,7 @@ private int maxSize = 0;
 
 private LevelMap readLoc(str name) {
 	loc lc = toLocation("project://<name>");
+	println(lc);
 	list[str] files = listEntries(lc);
 	
 	list[LevelMap] tmp = [];	

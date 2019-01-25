@@ -99,7 +99,7 @@ public void main(str projectName, bool executeCalculation) {
 	//}
 		
 	//visualize size in treemap
-	visualize(ProjectStat_sorted_loc);
+	visualize(ProjectStat_sorted_loc, projectName);
 	
 	// stop clock
 	int tstop = realTime();
