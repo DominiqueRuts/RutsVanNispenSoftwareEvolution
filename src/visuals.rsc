@@ -117,7 +117,7 @@ Figure LevelMapItem(list[LevelMap] li) {
 	real colorT = 0.0;
 	for (i <- li) {
 		if (i.children == []) {
-			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false))] | i.maxriskcc == getVeryHighRisk() || i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0] );
+			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false),popup("Object: <i.name>\nSize: <i.size> lines of code\nMax Risk: <i.maxriskcc>"))] | i.maxriskcc == getVeryHighRisk() || i.maxriskcc == getHighRisk() || i.maxriskcc == getModerateRisk() || i.maxriskcc == getLowRisk() || getDefaultRisk() == 0] );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
 				colorT += 0.1;
