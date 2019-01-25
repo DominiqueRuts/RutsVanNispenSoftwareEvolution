@@ -88,7 +88,7 @@ Figure scaledbox(int maxComplexity, ProjectFilesStats pf){
                ]);
 }
 
-data LevelMap = LevelMap(str name, list[LevelMap] children, int maxriskcc);
+data LevelMap = LevelMap(str name, list[LevelMap] children, int maxriskcc, int size);
 
 Figure scaledICicle(ProjectFilesStats pf){
 	str toplevel = split("/",pf[0].path)[1];
@@ -103,7 +103,7 @@ Figure scaledICicle(ProjectFilesStats pf){
 }
 
 Figure LevelMapGrid(LevelMap lm) {
-	return grid([[box(text(lm.name),top())],[LevelMapItem(lm.children)]],top());
+	return grid([[box(text(lm.name),top(),height(30))],[LevelMapItem(lm.children)]],top(),resizable(false));
 }
 
 Figure LevelMapItem(list[LevelMap] li) {
@@ -111,13 +111,12 @@ Figure LevelMapItem(list[LevelMap] li) {
 	real colorT = 0.0;
 	for (i <- li) {
 		if (i.children == []) {
-			str filteredName = substring(getFileName("<i.name>/"),0,findLast(getFileName("<i.name>/"),"."));
-			int mrc = (size(domainR(pfmaxriskcc,{filteredName})) > 0 ? pfmaxriskcc[filteredName]: 1);
-			lg+= grid([[box(width(5),top(),fillColor(getRiskColor(mrc)), size(10),top(),align(0))]] );
+			println(i.size);
+			lg+= grid([[box(width(sqrt(i.size)),height(100),top(),fillColor(getRiskColor(i.maxriskcc)),align(0),resizable(false))]] );
 		} else {
 			if (!isEmptyLevelMap(i[1])) {
 				colorT += 0.1;
-				lg+= grid([[box(text(i.name, textAngle(90),width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),top(),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
+				lg+= grid([[box(text(i.name,width(5),top()),width(5),top(),fillColor(color("blue",colorT)), size(10),align(0),resizable(true))],[LevelMapItem(i.children)]],resizable(false) );
 			}
 		}
 	}
@@ -133,6 +132,8 @@ private bool isEmptyLevelMap(list[LevelMap] l) {
 	}
 }
 
+private int maxSize = 0;
+
 private LevelMap readLoc(str name) {
 	loc lc = toLocation("project://<name>");
 	list[str] files = listEntries(lc);
@@ -141,15 +142,18 @@ private LevelMap readLoc(str name) {
 	
 	for(f <- files) {
 		str filePath = "<name>/<f>";
-		//println("project://<filePath>");
 		if (isDirectory(toLocation("project://<filePath>"))) {
 			tmp += readLoc(filePath);			
 		} else if(isFile(toLocation("project://<filePath>")) && endsWith(filePath, ".java")) {
-			tmp += LevelMap(filePath, [], 0);
+			str filteredName = substring(getFileName("<filePath>/"),0,findLast(getFileName("<filePath>/"),"."));
+			int mrc = (size(domainR(pfmaxriskcc,{filteredName})) > 0 ? pfmaxriskcc[filteredName]: 1);			
+			int size = (size(domainR(pfsize,{filteredName})) > 0 ? pfsize[filteredName]: 1);
+			maxSize = size > maxSize ? size : maxSize;
+			tmp += LevelMap(filePath, [], mrc, size);
 		}
 	}
 
-	return LevelMap(name, tmp, 0);
+	return LevelMap(name, tmp, 0, 0);
 }
 
 
@@ -311,12 +315,14 @@ private str ellipsePopupText(ProjectFilesStat s) {
 	return "Object: <s.file> \nLines of Code: <s.size> \nComplexity: <s.complexity> \nMethods: <s.methodCount>";
 }
 
+
+ProjectFilesSize pfsize = ();
 ProjectFilesMaxRiskCC pfmaxriskcc = ();
 
 private ProjectFilesStats getProjectFileStats(list[MethodStat] ProjectStat_sorted_loc) {
 	ProjectFilesStats pfs = [];
 	ProjectFilesPath pfpath = ();
-	ProjectFilesSize pfsize = ();
+	pfsize = ();
 	ProjectFilesMethods pfmethods = ();
 	ProjectFilesRiskCC pfriskcc = ();
 	pfmaxriskcc = ();
