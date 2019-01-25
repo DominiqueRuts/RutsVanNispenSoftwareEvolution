@@ -205,7 +205,7 @@ public void displayUnitSize(ProjectSummary psum, list[MethodStat] ProjectStat_so
 	str pname = psum.projectname + " - unit size treemap";
 	list[MethodStat] pms = ProjectStat_sorted_loc;	
 	t = treemap([ box(area(s.size), fillColor(getColor(s.risk_cc)), popup("Method: <s.name>\nSize: <s.size>\nComplexity: <s.complexity>")
-                 , execOnMouseDown("name: <s.name>, complexity: <s.complexity>, size: <s.size>") ) | s <- pms, s.size > 15
+                 , execOnMouseDown("name: <s.name>, size: <s.size>, complexity: <s.complexity>") ) | s <- pms, s.size > 15
                 ], vshrink(0.9), hshrink(0.975));
                 
 	render(pname, vcat([getHeaderView(psum, "Unit Size Treemap", "box area = unit size, box color = unit complexity"), t]));
@@ -215,10 +215,19 @@ public void displayFileSize(ProjectSummary psum, ProjectFilesStats pfs) {
 	str pname = psum.projectname + " - file size treemap";
 	cscale = colorScale(pfs.complexity, color("green"), color("darkred"));
     t = treemap([ box(area(s.size), fillColor(cscale(s.complexity)), popup("Filename: <s.file>\nSize: <s.size>\nComplexity: <s.complexity>")
-                , execOnMouseDown("name: <s.file>, complexity: <s.complexity>, size: <s.size>") ) | s <- pfs, s.size > 15
+                , execOnMouseDown("name: <s.file>, size: <s.size>, complexity: <s.complexity>") ) | s <- pfs, s.size > 15
                 ], vshrink(0.9), hshrink(0.975));
                 
 	render(pname, vcat([getHeaderView(psum, "File Size Treemap", "box area = file size, box color = file complexity"), t]));
+}
+
+public void displayFileRisk(ProjectSummary psum, ProjectFilesStats pfs) {
+	str pname = psum.projectname + " - file risk level treemap";
+    t = treemap([ box(area(s.size), fillColor(getColor(s.maxriskcc)), popup("Filename: <s.file>\nFile size (LOC): <s.size>\nRisk level (max.): <s.maxriskcc>")
+                , execOnMouseDown("filename: <s.file>, file size: <s.size>, risk level (max.): <s.maxriskcc>") ) | s <- pfs, s.size > 10
+                ], vshrink(0.9), hshrink(0.975));
+                
+	render(pname, vcat([getHeaderView(psum, "File Risk Level Treemap", "box area = file size, box color = max. risk level"), t]));
 }
 
 public void displayCCDist(ProjectSummary psum, ProjectFilesStats pfs) {
